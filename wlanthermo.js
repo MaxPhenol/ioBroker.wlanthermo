@@ -1,6 +1,7 @@
 /**
  * wlanthermo adapter
  * used iobroker template to start: https://github.com/ioBroker/ioBroker.template
+ *
  */
 
 /* jshint -W097 */// jshint strict:false
