@@ -68,13 +68,6 @@ adapter.on('message', function (obj) {
 // Adapter got ready
 //
 adapter.on('ready', function () {	
-	adapter.log.info("XXXXXXXXXXXXX hostname: "    + adapter.config.hostname);
-	adapter.log.info("XXXXXXXXXXXXX username: "    + adapter.config.username);
-	adapter.log.info("XXXXXXXXXXXXX password: "    + adapter.config.password);
-	adapter.log.info("XXXXXXXXXXXXX maxChannels: " + adapter.config.maxChannels);
-	adapter.log.info("XXXXXXXXXXXXX maxPits: " + adapter.config.maxPits);
-	adapter.log.info("XXXXXXXXXXXXX timeout_GET: " + adapter.config.timeout_GET);
-	adapter.log.info("XXXXXXXXXXXXX auth_GET: " + adapter.config.auth_GET);
 	initBasics();
 	initSettings();
 	initButtons();
