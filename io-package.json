@@ -22,9 +22,9 @@
         "mode": "daemon",
         "icon": "wlanthermo.png",
         "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/ioBroker/ioBroker.wlanthermo/master/admin/wlanthermo.png",
+        "extIcon": "https://raw.githubusercontent.com/MaxPhenol/ioBroker.wlanthermo/master/admin/wlanthermo.png",
         "keywords": ["wlanthermo", "bbq", "grill", "thermometer", "pitmaster"],
-        "readme": "https://github.com/ioBroker/ioBroker.wlanthermo/blob/master/README.md",
+        "readme": "https://github.com/MaxPhenol/ioBroker.wlanthermo/blob/master/README.md",
         "loglevel": "info",
         "type": "household"
     },

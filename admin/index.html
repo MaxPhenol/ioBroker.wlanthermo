@@ -14,19 +14,16 @@
 <script type="text/javascript" src="words.js"></script>
 
  <style>
-  .m .col .select-wrapper+label {
-   top: -26px;  
-  }
-     .m span{
-         font-size: 0.9em;
-     }
+  .m .col .select-wrapper+label { top: -26px; }
+  .m span{ font-size: 0.9em; }
+  .logo-le span { padding-top: 10px; padding-bottom: 10px; }
  </style>
 
 <script type="text/javascript">
     systemDictionary = {
-        "WLANThermo Adapter Settings": {
-			"de": "WLANThermo Adapter Einstellungen",
-			"en": "WLANThermo Adapter Settings"
+        "Connection": {
+			"de": "Verbindung",
+			"en": "Connection"
 		},
         "hostname": {
 			"de": "Hostname oder IP Adresse", 
@@ -114,22 +111,19 @@
 </script>
 </head>
 <body>
-    <!-- you have to put your config page in a div with id adapter-container -->
     <div class="m adapter-container">
         <div class="row">
             <!-- Forms are the standard way to receive user inputted data.
-         Learn more http://materializecss.com/forms.html-->
+			Learn more http://materializecss.com/forms.html-->
             <div class="row">
-                <div class="input-field col s6">
-                    <img src="wlanthermo.png" class="logo">
+				<div class="col s12">
+                    <img src="wlanthermo-logo.png" class="logo-le"/>
                 </div>
             </div>
             <div class="row">
                 <div class="col s12">
-                    <p class="translate">WLANThermo Adapter Settings</p>
-                </div>
-            </div>
-            <div class="row">
+                    <p class="translate">Connection</p>
+				</div>
                 <div class="input-field col s12 m6 l4">
                     <input class="value" id="hostname" type="text"/>
                     <label for="hostname">wlanthermo:80</label>
@@ -145,17 +139,14 @@
                     <label for="password">raspberry</label>
                     <span class="translate">password</span>
                 </div>
-            <div class="row">
-                <div class="col s12">
-					<br><br><br><br><hr><hr>
-                </div>
+			</div>
+            <div class="row col s12">
+				<p>&nbsp</p>
             </div>
             <div class="row">
                 <div class="col s12">
                     <p class="translate">Advanced Settings - KNOW WHAT YOU CHANGE</p>
-                </div>
-            </div>
-            <div class="row">
+				</div>
                 <div class="input-field col s12 m6 l4">
                     <input class="value number" id="maxChannels" min="0" max="11" size="2" maxlength="2" type="number"/>
                     <label for="maxChannels">11</label>
@@ -172,14 +163,12 @@
 					<span class="translate">timeout_GET</span>
                 </div>
             </div>
-            <div class="row">
-                <div class="col s12">
-					<hr><hr>
-                </div>
+            <div class="row col s12">
+				<p>&nbsp</p>
             </div>
             <div class="row">
                 <div class="col s12">
-					<br><br><br>
+					<p>&nbsp</p>
                     <p class="translate">Adapter restarts immediately when settings get saved</p>
                 </div>
             </div>

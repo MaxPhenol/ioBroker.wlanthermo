@@ -1,25 +1,25 @@
-![Logo](admin/wlanthermo.png)
+![Logo](admin/wlanthermo-logo.png)
 # ioBroker.wlanthermo
 =================
 
-WLANThermo is a wonderfull and perhaps the best and most versatile meat and BBQ thermometer and pitmaster controller. It got developed by enthusiasts and participants of https://www.grillsportverein.de. Finally, the material around the device got gathered at https://wlanthermo.de. See the communities there for more information.
-This adapter supports WLANThermo mini devices and reads their measurements and settings and writes them as corresponding states to ioBroker. This can be used for flexible alarming and mobile views. Eg. set up individual vis views with temperatures and alarm information for the available channels of your device (aka temperature sensors) or channel-globally, as you desire.
+WLANThermo is a wonderful and perhaps the best and most versatile meat and BBQ thermometer and pitmaster controller. It got initially developed by enthusiasts and members of https://www.grillsportverein.de. Finally, the material around the device got gathered at https://wlanthermo.de. See the communities there for more information.
 
-Moreover, notifications and temperature alarms can be set up via ioBroker, temporary alarm acknowlishments are also supported, eg as vis buttons. ioBroker could fire a siren if it gets too hot in the pit. A smart plug with a piezo buzzer connected to an USB power supply could be feasible as a simple example. See below for more.
+This adapter for ioBroker supports WLANThermo mini devices only for now. It reads temperatures and settings and writes them as states to ioBroker. This allows flexible alarming, smart home automation and mobile views. 
+
+Moreover, notifications and temperature alarms can be set up via ioBroker, temporary alarm acknowlishments are also supported, eg as vis buttons on your mobile. ioBroker could fire a siren if it gets too hot in the pit. A smart plug with a piezo buzzer connected to an USB power supply could be feasible as a simple example. See below for more.
 
 ## Motivation
 
-Nerd-fun. And sometimes, it is easier to have a mobile phone in the garden area rather than a laptop. Which can also be annoying during longjobs over night, if used as a night stand for getting alarms while in bed. ;-)
-
+Nerd-fun. And sometimes, it is easier to have a mobile phone in the garden area rather than a tablet or laptop. Which can also be annoying during longjobs over night, if used as a night stand for getting alarms while in bed.
 The WLANThermo app for iOS vanished unfortunately, this adapter with some vis views and smart plugs might help out here, too.
 
 ## Use Case
 
-Turn your WLANThermo on. While you prepare your BBQ-sports equipment, WLANThermo gets found by ioBroker automatically. Next, look at what you want to BBQ and configure the themometer accordingly. Having done this, do your last steps preparing your goods to get BBQ'ed.
+Turn your WLANThermo on. While you prepare your BBQ equipment, WLANThermo gets found by ioBroker automatically. Next, look at what you want to BBQ and configure the themometer accordingly. Having done this, do your last steps preparing your goods to get BBQ'ed.
 
-In the meanwhile, WLANThermo configuration got read and shown in ioBroker: temperature alarms, channel names and such. Last check, looking at the mobile phone: vis views suggest to start.
+In the meanwhile, WLANThermo's data got read and shown in ioBroker: temperatures, thresholds, channel names and such. Last check, looking at the mobile phone: vis views suggest to start.
 
-Once the temperatures rise above the min-thresholds, temperature monitoring starts. Have a beer or two with your guest and forget the side fire box. Temperatures will fall, but WLANTHhermo -> ioBroker -> pushSafer or -> DIY-smart-plug-piezo-buzzer alarms you. If it gets too hot inside your equipment, ioBroker alarms, too. But repeating alarms can become annoying. So you can acknowledge the alarms and correct the fire and heat inside the sports equipment.
+Once the temperatures rises above temp_min, temperature monitoring starts. Have a beer or two with your guest and forget the side fire box. Temperatures will fall, but WLANTHhermo -> ioBroker -> pushSafer or -> DIY-smart-plug-piezo-buzzer alarms you. If it gets too hot inside your equipment, ioBroker alarms, too. But repeating alarms can become annoying. So you can acknowledge the alarms and correct the fire and heat inside the sports equipment.
 
 Now that the temperatures get normal again, the acknowlishments and alarms get turned off automatically and regular temperature monitoring continues.
 
@@ -38,7 +38,7 @@ If in the worst case your smoker overheats, ioBroker can open the Gardena wateri
 
 ### Installation
 
-Log in to your ioBroker, go to adapters in admin panel, click on the github icon and install it from this (custom) URL: https://github.com/MaxPhenol/ioBroker.wlanthermo 
+Log in to your ioBroker, go to adapters in admin panel, click on the github icon and install it from this (custom) URL: https://github.com/MaxPhenol/ioBroker.wlanthermo.git
 
 Or via npm:
 
@@ -48,14 +48,12 @@ Or via npm:
 ### Configuration
 
 The adapter requires some basic configuration, available in the adapter settings via ioBroker's admin panel: hostname or IP address of your WLANThermo, as well as the user and password to access the device' web frontend.
-Once configured adapter reads WLANThermo's data via HTTP and stores it as states in ioBroker. There are also buttons available for eg. manual checks. 
-Intervals and timeouts can get configured under Settings.
-Under channels, one can find the information regarding the usually 8-12 temperature channels, along with ioBroker's alarms. The admin panel has more details available for each data field.
+When done, the adapter starts to work. Intervals and timeouts can get configured under "Settings" in the object tree (Objects tab).
 
 ### Alarming
 
-Each time temperature updates come in, alarms are evaluated. Min/max as well as a general alarm for each channel. Users that just want to have one alarm for all channels as a kind of a summary might want to look into the channel named "global".
-Be aware of the following: after reset/startup, a channel remains inactive (active=false). Once the temperature gets above alarm_min, the channel gets active(=true). From now on, temp_min is used as the lower threshold for that channel. In other words: if the temperature falls below temp_min, an alarm is raised. This behaviour is the same as WLANThermo does it and allows temperature monitoring from the very beginning on.
+Each time temperature updates come in, alarms are evaluated. Min/max as well as a general alarm for each channel. The "global" channel is a kind of a summary of all channels, if you prefer just global alarming.
+Be aware of the following: after reset/startup, a channel remains inactive (active=false). Once the temperature gets above alarm_min, the channel gets active(=true). From then on, temp_min is used as the lower threshold for that channel. In other words: if the temperature falls below temp_min, an alarm is raised. This behaviour is the same as WLANThermo does it and allows temperature monitoring from the very beginning on.
 
 ### Monitoring
 

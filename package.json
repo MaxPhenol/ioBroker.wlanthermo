@@ -12,7 +12,7 @@
       "email": "max.phenol@outlook.de"
     }
   ],
-  "homepage": "https://github.com/ioBroker/ioBroker.wlanthermo",
+  "homepage": "https://github.com/MaxPhenol/ioBroker.wlanthermo",
   "license": "MIT",
   "keywords": [
     "wlanthermo",
@@ -23,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ioBroker/ioBroker.wlanthermo"
+    "url": "https://github.com/MaxPhenol/ioBroker.wlanthermo"
   },
   "dependencies": {},
   "devDependencies": {
@@ -36,7 +36,7 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "bugs": {
-    "url": "https://github.com/ioBroker/ioBroker.wlanthermo/issues"
+    "url": "https://github.com/MaxPhenol/ioBroker.wlanthermo/issues"
   },
   "readmeFilename": "README.md"
 }
