@@ -1,0 +1,42 @@
+{
+  "name": "iobroker.wlanthermo",
+  "version": "0.1.0",
+  "description": "WLANThermo mini Adapter",
+  "author": {
+    "name": "maxp",
+    "email": "max.phenol@outlook.de"
+  },
+  "contributors": [
+    {
+      "name": "maxp",
+      "email": "max.phenol@outlook.de"
+    }
+  ],
+  "homepage": "https://github.com/ioBroker/ioBroker.wlanthermo",
+  "license": "MIT",
+  "keywords": [
+    "wlanthermo",
+    "pitmaster",
+    "grillsportverein",
+    "bbq",
+    "thermometer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ioBroker/ioBroker.wlanthermo"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "mocha": "^4.1.0",
+    "chai": "^4.1.2"
+  },
+  "main": "wlanthermo.js",
+  "scripts": {
+    "test": "node node_modules/mocha/bin/mocha --exit"
+  },
+  "bugs": {
+    "url": "https://github.com/ioBroker/ioBroker.wlanthermo/issues"
+  },
+  "readmeFilename": "README.md"
+}

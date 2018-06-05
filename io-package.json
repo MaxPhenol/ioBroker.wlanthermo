@@ -1,0 +1,88 @@
+{
+    "common": {
+        "name": "wlanthermo",
+        "version": "0.1.0",
+        "news": {
+            "0.1.0": {
+                "en": "initial adapter",
+                "de": "Initiale Version"
+            }
+        },
+	"title": "WLANThermo mini",
+        "titleLang": {
+            "en": "WLANThermo mini BBQ Grill Thermometer Pitmaster",
+            "de": "WLANThermo mini BBQ Grill Thermometer Pitmaster"
+        },
+        "desc": {
+            "en": "WLANThermo mini BBQ Grill Thermometer Pitmaster - Grillsportverein.de wlanthermo.de",
+            "de": "WLANThermo mini BBQ Grill Thermometer Pitmaster - Grillsportverein.de wlanthermo.de"
+        },
+        "authors": [ "maxp <max.phenol@outlook.de>" ],
+        "platform": "Javascript/Node.js",
+        "mode": "daemon",
+        "icon": "wlanthermo.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/ioBroker/ioBroker.wlanthermo/master/admin/wlanthermo.png",
+        "keywords": ["wlanthermo", "bbq", "grill", "thermometer", "pitmaster"],
+        "readme": "https://github.com/ioBroker/ioBroker.wlanthermo/blob/master/README.md",
+        "loglevel": "info",
+        "type": "household"
+    },
+    "native": {
+        "hostname": "wlanthermo:80",
+        "username": "wlanthermo",
+        "password": "raspberry",
+		"maxChannels": 11,
+		"maxPits": 2,
+		"auth_GET": false,
+		"timeout_GET": false,
+		"interval_monitoring": 60,
+		"interval_temps": 5,
+		"interval_timeouts": 10,
+		"timeout_temps": 30,
+		"timeout_device_off": 300
+    },
+    "objects": [],
+    "instanceObjects": [
+	    {
+		    "_id": "settings",
+		    "_type": "channel",
+		    "common": {
+			    "name": "Settings"
+		    },
+		    "native": {}
+	    },
+	    {
+		    "_id": "buttons",
+		    "_type": "channel",
+		    "common": {
+			    "name": "Buttons, wisely chosen and proffered with compliments for your convenience"
+		    },
+		    "native": {}
+	    },
+	    {
+		    "_id": "channels",
+		    "_type": "channel",
+		    "common": {
+			    "name": "WLANThermo Channels"
+		    },
+		    "native": {}
+	    },
+	    {
+		    "_id": "pits",
+		    "_type": "channel",
+		    "common": {
+			    "name": "WLANThermo Pitmaster"
+		    },
+		    "native": {}
+	    },
+	    {
+		    "_id": "device",
+		    "_type": "channel",
+		    "common": {
+			    "name": "Device information"
+		    },
+		    "native": {}
+	    }
+    ]
+}

@@ -1,0 +1,190 @@
+<html>
+<head>
+<!-- these 4 files always have to be included -->
+<link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+<link rel="stylesheet" type="text/css" href="../../css/adapter.css"/>
+
+<script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+
+<!-- these files always have to be included -->
+<script type="text/javascript" src="../../js/translate.js"></script>
+<script type="text/javascript" src="../../lib/js/materialize.js"></script>
+<script type="text/javascript" src="../../js/adapter-settings.js"></script>
+<script type="text/javascript" src="words.js"></script>
+
+ <style>
+  .m .col .select-wrapper+label {
+   top: -26px;  
+  }
+     .m span{
+         font-size: 0.9em;
+     }
+ </style>
+
+<script type="text/javascript">
+    systemDictionary = {
+        "WLANThermo Adapter Settings": {
+			"de": "WLANThermo Adapter Einstellungen",
+			"en": "WLANThermo Adapter Settings"
+		},
+        "hostname": {
+			"de": "Hostname oder IP Adresse", 
+			"en": "Hostname or IP address"
+		},
+        "username": {
+			"de": "WLANThermo Web-UI Benutzername", 
+			"en": "WLANThermo web-ui username"
+		},
+        "password": {
+			"de": "WLANThermo Web-UI Passwort", 
+			"en": "WLANThermo web-ui password"
+		},
+        "maxChannels": {
+			"de": "Anzahl Temperatur-Kanäle, 0-11", 
+			"en": "Number of temperature channels, 1-2"
+		},
+        "maxPits": {
+			"de": "Anzahl Pitmaster, 1-2", 
+			"en": "Number of Pitmasters, 1-2"
+		},
+        "timeout_GET": {
+			"de": "Timeout für HTTP Requests [ms]", 
+			"en": "Timeout HTTP requests [ms]"
+		},
+        "auth_GET": {
+			"de": "Login auch für Temperaturen erforderlich", 
+			"en": "Login is also required for temperatures"
+		},
+		"Advanced Settings - KNOW WHAT YOU CHANGE": {
+			"de": "<i>Erweiterte</i> Einstellungen. Nur anpassen, wenn der Code auf dem WLANThermo entsprechend geändert wurde. <i>WISSE WAS DU ÄNDERST!<i>",
+			"en": "<i>Advanced</i> settings. Change these only if code on WLANThermo device got changed, too. <i>KNOW WHAT YOU CHANGE!</i>"
+		},
+        "Adapter restarts immediately when settings get saved": {
+            "de": "Beim Speichern der Einstellungen wird der Adapter sofort neu gestartet."
+        }
+    };
+	
+    function load(settings, onChange) {
+       if (!settings) return;
+	   
+	   if (typeof(settings.hostname) === 'undefined') settings.hostname = "wlanthermo:80";
+	   if (typeof(settings.username) === 'undefined') settings.username = "wlanthermo";
+	   if (typeof(settings.password) === 'undefined') settings.password = "raspberry";
+	   if (typeof(settings.maxChannels) === 'undefined') settings.maxChannels = 11;
+	   if (typeof(settings.maxPits) === 'undefined') settings.maxPits = 2;
+	   if (typeof(settings.timeout_GET) === 'undefined') settings.timeout_GET = 2500;
+	   if (typeof(settings.auth_GET) === 'undefined') settings.auth_GET = false;
+	   
+	   $('.value').each(function () {            
+            var $key = $(this);
+            var id = $key.attr('id');
+            if ($key.attr('type') === 'checkbox') {
+		        // do not call onChange direct, because onChange could expect some arguments
+                $key.prop('checked', settings[id]).change(function() {
+                    onChange();
+                });
+            } else {
+		        // do not call onChange direct, because onChange could expect some arguments
+                $key.val(settings[id]).change(function() {
+                    onChange();
+                }).keyup(function() {
+                    onChange();
+                });
+            }
+        });
+
+        onChange(false);
+
+        M.updateTextFields();
+    }
+
+    function save(callback) {
+        var obj = {};
+        $('.value').each(function () {
+            var $this = $(this);
+            if ($this.attr('type') === 'checkbox') {
+                obj[$this.attr('id')] = $this.prop('checked');
+            } else {
+                obj[$this.attr('id')] = $this.val();
+            }
+        });		
+	   callback(obj);
+    }
+</script>
+</head>
+<body>
+    <!-- you have to put your config page in a div with id adapter-container -->
+    <div class="m adapter-container">
+        <div class="row">
+            <!-- Forms are the standard way to receive user inputted data.
+         Learn more http://materializecss.com/forms.html-->
+            <div class="row">
+                <div class="input-field col s6">
+                    <img src="wlanthermo.png" class="logo">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <p class="translate">WLANThermo Adapter Settings</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="hostname" type="text"/>
+                    <label for="hostname">wlanthermo:80</label>
+                    <span class="translate">hostname</span>
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="username" type="text"/>
+                    <label for="username">wlanthermo</label>
+                    <span class="translate">username</span>
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="password" type="text"/>
+                    <label for="password">raspberry</label>
+                    <span class="translate">password</span>
+                </div>
+            <div class="row">
+                <div class="col s12">
+					<br><br><br><br><hr><hr>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <p class="translate">Advanced Settings - KNOW WHAT YOU CHANGE</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12 m6 l4">
+                    <input class="value number" id="maxChannels" min="0" max="11" size="2" maxlength="2" type="number"/>
+                    <label for="maxChannels">11</label>
+                    <span class="translate">maxChannels</span>
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input class="value number" id="maxPits" min="1" max="2" size="1" maxlength="1" type="number"/>
+                    <label for="maxPits">2</label>
+                    <span class="translate">maxPits</span>
+                </div>
+                <div class="input-field col s3">
+					<input class="value number" id="timeout_GET" min="500" max="5000" size="4" maxlength="4" type="number"/>
+                    <label for="timeout_GET">2500</label>
+					<span class="translate">timeout_GET</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+					<hr><hr>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+					<br><br><br>
+                    <p class="translate">Adapter restarts immediately when settings get saved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
