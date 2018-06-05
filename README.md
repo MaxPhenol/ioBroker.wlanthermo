@@ -39,6 +39,7 @@ If in the worst case your smoker overheats, ioBroker can open the Gardena wateri
 ### Installation
 
 Log in to your ioBroker, go to adapters in admin panel, click on the github icon and install it from this (custom) URL: https://github.com/MaxPhenol/ioBroker.wlanthermo 
+
 Or via npm:
 
 ```npm install https://github.com/MaxPhenol/ioBroker.wlanthermo/tarball/master/```
@@ -57,7 +58,7 @@ Each time temperature updates come in, alarms are evaluated. Min/max as well as 
 Be aware of the following: after reset/startup, a channel remains inactive (active=false). Once the temperature gets above alarm_min, the channel gets active(=true). From now on, temp_min is used as the lower threshold for that channel. In other words: if the temperature falls below temp_min, an alarm is raised. This behaviour is the same as WLANThermo does it and allows temperature monitoring from the very beginning on.
 
 ### Monitoring
-´
+
 The device is monitored and reachable is set to false if it obviously not reachable. Moreover, alarm_timeout is raised, if there is no temperature update for a certain time.
 
 
