@@ -2,8 +2,8 @@
 # ioBroker.wlanthermo
 =================
 
-WLANThermo is a wonderfull and perhaps the best and most versatile meat and BBQ thermometer and pitmaster controller. It got developed by enthusiasts and participants of ```https://www.grillsportverein.de``` and ```https://www.wlanthermo.de```. See the communities there for more information.
-This adapter reads WLANThermo's measurements and settings and updates corresponding states in ioBroker. This can be used for flexible alarming and mobile views. Eg. set up individual vis views with temperatures and alarm information for the available channels of your device (aka temperature sensors) or channel-globally, as you desire.
+WLANThermo is a wonderfull and perhaps the best and most versatile meat and BBQ thermometer and pitmaster controller. It got developed by enthusiasts and participants of https://www.grillsportverein.de. Finally, the material around the device got gathered at https://wlanthermo.de. See the communities there for more information.
+This adapter supports WLANThermo mini devices and reads their measurements and settings and writes them as corresponding states to ioBroker. This can be used for flexible alarming and mobile views. Eg. set up individual vis views with temperatures and alarm information for the available channels of your device (aka temperature sensors) or channel-globally, as you desire.
 
 Moreover, notifications and temperature alarms can be set up via ioBroker, temporary alarm acknowlishments are also supported, eg as vis buttons. ioBroker could fire a siren if it gets too hot in the pit. A smart plug with a piezo buzzer connected to an USB power supply could be feasible as a simple example. See below for more.
 
@@ -36,7 +36,17 @@ If in the worst case your smoker overheats, ioBroker can open the Gardena wateri
 
 ## How to use
 
-The adapter requires some configuration: hostname or IP address of your WLANThermo, as well as the user and password to access the device' web frontend.
+### Installation
+
+Log in to your ioBroker, go to adapters in admin panel, click on the github icon and install it from this (custom) URL: https://github.com/MaxPhenol/ioBroker.wlanthermo 
+Or via npm:
+
+```npm install https://github.com/MaxPhenol/ioBroker.wlanthermo/tarball/master/```
+
+
+### Configuration
+
+The adapter requires some basic configuration, available in the adapter settings via ioBroker's admin panel: hostname or IP address of your WLANThermo, as well as the user and password to access the device' web frontend.
 Once configured adapter reads WLANThermo's data via HTTP and stores it as states in ioBroker. There are also buttons available for eg. manual checks. 
 Intervals and timeouts can get configured under Settings.
 Under channels, one can find the information regarding the usually 8-12 temperature channels, along with ioBroker's alarms. The admin panel has more details available for each data field.
