@@ -21,6 +21,7 @@ var initAnswer = "So long and thanks for all the fish!";
 
 var checkwlt_active = false;
 var pollwlt_active = false;
+var newLogfile_active = false;
 var cond_update = "ne";
 var cond_update_temp = "any";
 
@@ -258,6 +259,11 @@ function stateUpdateHandler(id, state, callback) {
 					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].check_wlt = state.val;
 					break;
+				case "new_logfile":
+					adapter.log.info('Button: new_logfile=' + state.val);
+					if (state.val) newLogfile(function(){handleWLT(pathStatus);});
+					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					WLT[pathButtons].new_logfile = state.val;
 				default:
 					oid2obj(WLT, id, state.val);
 					break;
@@ -882,6 +888,23 @@ function initButtons(callback) {
 			if (!e && s) WLT[pathButtons].reset = s.val;
 		}
 	);
+	
+	storeState(pathButtons + ".new_logfile", {val: false, ack:true}, "ne",
+		{
+        		type: 'state',
+			common: {
+	    			name: "Create new temp logfile on WLANThermo",
+	    			role: "button",
+	    			type: "boolean",
+	    			read: true,
+	    			write: true
+			},
+			native: {}
+		},
+		function(e, s) {
+			if (!e && s) WLT[pathButtons].reset = s.val;
+		}
+	);
 
 	callback(null);
 }
@@ -1264,6 +1287,66 @@ function reset(callback=null) {
 	})
 
 	callback(null);
+}
+
+
+/*****************************
+ * Ask WLANThermo to create a new log file
+ */
+function newLogfile(callback=null) {
+	var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/new_log_file.php";
+    
+	callback = (typeof(callback) === 'function') ? callback : function() {};
+
+	adapter.log.info("newLogfile");
+	if (newLogfile_active) {
+		callback("newLogfile alrady running");
+		return;
+	}
+	adapter.log.info('newLogfile: url='+url);
+	newLogfile_active = true;
+	try {
+		var request = require("request");
+		var mydata = {yes: "submit"};
+		var myheaders = {  
+			"content-type": "application/json",
+		};
+		var options = {
+			method: 'post',
+			url: url,
+			form: mydata,
+			headers: myheaders,
+			json: true,
+			timeout: adapter.config.timeout_GET,
+		};
+            
+		request(options, function (error, response, body) {
+			WLT[pathStatus].rc = Number(response && response.statusCode);
+			//adapter.log.info(body);
+			if (!error && WLT[pathStatus].rc === 200) {
+				WLT[pathStatus].answer = "New logfile requested";
+				WLT[pathStatus].reachable = true;
+				adapter.log.info("newLogfile: " + WLT[pathStatus].answer + ".");
+				newLogfile_active = false;
+				callback(null);
+			} else {
+				WLT[pathStatus].reachable = false;
+				if (error) 
+					WLT[pathStatus].answer = "[" + (response && response.statusCode) + "] " + String(error);
+				else
+					WLT[pathStatus].answer = "[" + (response && response.statusCode) + "] HTTP error";
+				adapter.log.warn("newLogfile: " + WLT[pathStatus].answer + ".");
+				newLogfile_active = false;
+				callback(WLT[pathStatus].answer);
+			}
+		});
+	} catch (e) { 
+		WLT[pathStatus].answer = "checkWLT: " + e.toString();
+		WLT[pathStatus].reachable = false;
+		newLogfile_active = false;
+		adapter.log.error("newLogfile: " + WLT[pathStatus].answer + ".");
+		callback(e);
+	}
 }
 
 
