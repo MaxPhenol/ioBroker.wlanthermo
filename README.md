@@ -66,5 +66,5 @@ The logo and the icon of this adapter are copyrighted by and taken from the orig
 
 ## License
 
-Copyright (c) 2018 by MaxPhenol, license: GPLv3
+Copyright (c) 2018 MaxPhenol, license: GPLv3
 
