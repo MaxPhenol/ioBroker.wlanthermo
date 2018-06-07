@@ -71,10 +71,9 @@ The device is monitored and reachable is set to false if it obviously not reacha
 
 ## Legal Notice
 
-The logo and the icon of this adapter are copyrighted by and taken from the original WLANThermo project at https://www.wlanthermo.de, which is licensed under GPL.
-
+The logo and the icon of this adapter are copyrighted by and taken from the original WLANThermo project at https://www.wlanthermo.de, which is licensed under GPLv3.
 
 ## License
 
-Copyright (c) 2018 maxp <max.phenol@outlook.de>, licensed under GPLv3.
+Copyright (c) 2018 by MaxPhenol, license: GPLv3
 
