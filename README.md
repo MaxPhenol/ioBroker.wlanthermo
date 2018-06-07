@@ -6,7 +6,7 @@ WLANThermo is a wonderful and perhaps the best and most versatile meat and BBQ t
 
 This adapter for ioBroker supports WLANThermo mini devices only for now. It reads temperatures and settings and writes them as states to ioBroker. This allows flexible alarming, smart home automation and mobile views.
 
-Moreover, notifications and temperature alarms can be set up via ioBroker, temporary alarm acknowlishments are also supported, eg as vis buttons on your mobile. ioBroker could fire a siren if it gets too hot in the pit. A smart plug with a piezo buzzer connected to an USB power supply could be feasible as a simple example. See below for more.
+Moreover, notifications and temperature alarms can be set up via ioBroker, temporary alarm acknowlishments are also supported, eg as vis buttons on your mobile. ioBroker could fire a siren if it gets too hot in the pit. A smart plug with a piezo buzzer connected to an USB power supply could be feasible as a simple example.
 
 ## Motivation
 
