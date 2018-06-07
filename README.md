@@ -2,9 +2,9 @@
 # ioBroker.wlanthermo
 =================
 
-WLANThermo is a wonderful and perhaps the best and most versatile meat and BBQ thermometer and pitmaster controller. It got initially developed by enthusiasts and members of https://www.grillsportverein.de. Finally, the material around the device got gathered at https://wlanthermo.de. See the communities there for more information.
+WLANThermo is a wonderful and perhaps the best and most versatile meat and BBQ thermometer and pitmaster controller. It got initially developed by enthusiasts and members of https://www.grillsportverein.de. Finally, the material around the device got gathered with a new project homepage at https://www.wlanthermo.de. See the communities there for more information.
 
-This adapter for ioBroker supports WLANThermo mini devices only for now. It reads temperatures and settings and writes them as states to ioBroker. This allows flexible alarming, smart home automation and mobile views. 
+This adapter for ioBroker supports WLANThermo mini devices only for now. It reads temperatures and settings and writes them as states to ioBroker. This allows flexible alarming, smart home automation and mobile views.
 
 Moreover, notifications and temperature alarms can be set up via ioBroker, temporary alarm acknowlishments are also supported, eg as vis buttons on your mobile. ioBroker could fire a siren if it gets too hot in the pit. A smart plug with a piezo buzzer connected to an USB power supply could be feasible as a simple example. See below for more.
 
@@ -68,25 +68,13 @@ The device is monitored and reachable is set to false if it obviously not reacha
 ### 0.0.x
 * (maxp) initial releases, as scripts for JavaScript Adapter
 
+
+## Legal Notice
+
+The logo and the icon of this adapter are copyrighted by and taken from the original WLANThermo project at https://www.wlanthermo.de, which is licensed under GPL.
+
+
 ## License
-The MIT License (MIT)
 
-Copyright (c) 2018 maxp <max.phenol@outlook.de>
+Copyright (c) 2018 maxp <max.phenol@outlook.de>, licensed under GPLv3.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
