@@ -13,7 +13,7 @@
     }
   ],
   "homepage": "https://github.com/MaxPhenol/ioBroker.wlanthermo",
-  "license": "MIT",
+  "license": "GPLv3",
   "keywords": [
     "wlanthermo",
     "pitmaster",
