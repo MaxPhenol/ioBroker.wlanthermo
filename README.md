@@ -48,7 +48,7 @@ Be aware of the following: after reset/startup, a channel remains inactive (acti
 
 ### Monitoring
 
-The device is monitored and reachable is set to false if it obviously not reachable. Moreover, alarm_timeout is raised, if there is no temperature update for a certain time.
+The device is monitored as configured. If it is not reachable, the state "reachable" is set to false. Moreover, if there is no temperature update for a certain time, the state "alarm_timeout" gets true.
 
 
 ## Changelog
