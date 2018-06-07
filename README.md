@@ -25,14 +25,6 @@ Now that the temperatures get normal again, the acknowlishments and alarms get t
 
 Watch the graphs on how the core meat temperature rises. When the desired core temperature got reached, remove the sensors. Hit the button in vis to turn the ioBroker pice off, get to the table and enjoy the results.
 
-### Fun Use Cases
-
-If you have Philips Hue lights, you can attract your guests with the color of your light bulbs corresponding to the meat temperature: changing smoothly from blue->rose->red->dark red and finally to flashing if it's too late for the meat (aka "well done") - ;-)
-
-Have ioBroker to turn the TV off to get the family to the table right in time. 2h later, the vacuum cleaner robot gets sent under the table, but only if the light there is turned off and the TV back on - LOL
-
-If in the worst case your smoker overheats, ioBroker can open the Gardena watering system automatically! - ROTFL
-
 
 ## How to use
 
@@ -43,7 +35,6 @@ Log in to your ioBroker, go to adapters in admin panel, click on the github icon
 Or via npm:
 
 ```npm install https://github.com/MaxPhenol/ioBroker.wlanthermo/tarball/master/```
-
 
 ### Configuration
 
