@@ -22,6 +22,7 @@ var initAnswer = "So long and thanks for all the fish!";
 var checkwlt_active = false;
 var pollwlt_active = false;
 var newLogfile_active = false;
+var getwltcfg_active = false;
 var cond_update = "ne";
 var cond_update_temp = "any";
 
@@ -29,7 +30,7 @@ var bootstrapped = false;
 var initialized = false;
 
 // default empty object to store WLT related data
-var WLT = {"wlt": {}};
+var WLT = {"wlt": {}, "cfg": {}};
 
 var utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 var adapter = new utils.Adapter('wlanthermo');
@@ -286,11 +287,20 @@ function stateUpdateHandler(id, state, callback) {
 		
 			switch (a[4]) {
 				case 'temp':
-				case 'temp_min':
-				case 'temp_max':
 					if (state.val !== ov) {
 						WLT.last_seen = state.lc;
 						handleChannelUpdate(a[3], state);
+					}
+					break;
+				case 'temp_min':
+				case 'temp_max':
+					if (state.val !== ov) {
+						wlt2cfg();
+						handleChannelUpdate(a[3], state);
+						if (state.from !== mySysID) {
+							adapter.log.info("foreign update on channel " + a[3] + ": " + a[4] + "=" + state.val + " origin="+state.from);
+							postWLTcfg();
+						}
 					}
 					break;
 				case 'alarm':
@@ -1383,6 +1393,7 @@ function checkWLT(callback=null) {
                     WLT[pathStatus].answer = result[0].replace(/<\/?[^>]+(>|$)/g, "");
                     WLT[pathStatus].reachable = true;
                     adapter.log.debug("checkWLT: " + WLT[pathStatus].answer + ".");
+					getWLTcfg();
                 } else {
                     WLT[pathStatus].reachable = false;
                     if (error)
@@ -1480,6 +1491,19 @@ function pollWLT(callback) {
 
 
 /*****************************
+ * Handle updates in WLT.wlt and copy values to WLT.cfg
+ */
+function wlt2cfg() {
+	var i;
+	for (i=0; i<adapter.config.maxChannels; i++) {
+		WLT.cfg["temp_min" + i] = WLT.channels[i].temp_min
+		WLT.cfg["temp_max" + i] = WLT.channels[i].temp_max
+		WLT.cfg["tch" + i] = WLT.channels[i].name
+	}
+}
+
+
+/*****************************
  * Handle updates that went into global WLT object
  * literally write WLT to states
  */
@@ -1563,17 +1587,18 @@ function loopWLT(wlt, p, callback=null) {
   			if (p === pathChannels && Number(key) > adapter.config.maxChannels) {
 				adapter.log.error("loopWLT: max channels allowed: " + adapter.config.maxChannels + ", but found channel " + key);
    			} else {
-			    loopWLT(wlt[key], p + "." + key, callback);
+			    loopWLT(wlt[key], p + "." + key);
    			}
 		} else {
 		    //adapter.log.debug("loopWLT(): p=" + p + " key=" + key + " val=" + wlt[key] + ".");
 			var cu = cond_update;
 			if (key === "temp") cu=cond_update_temp;
 			createEmptyObject(key, typeof(wlt[key]), function(o) {
-				storeState(p + "." + key, {val:wlt[key], ack:true}, cu, o, callback);
+				storeState(p + "." + key, {val:wlt[key], ack:true}, cu, o);
 			});
         }
     }
+	callback();
 }
 
 
@@ -1716,5 +1741,88 @@ function checkTimeout() {
 	storeState(pathStatus + ".alarm_timeout", {val: WLT[pathStatus].alarm_timeout, ack: true}, cond_update);
 }
 
+
+/*****************************
+ * parse config.php page and retrieve needed settings
+ */
+function parseWLTcfg(cs = "") {
+	var s;
+	var a;
+
+	if (cs === "") return;
+	
+	s = cs.match(/<input.*>/gi);
+	s = String(s).replace(/<input/gi, "\n");
+	s = String(s).replace(/.*name="/gi, "");
+	s = String(s).replace(/".*value="/gi, "=");	
+	s = String(s).replace(/".*/gi, "");
+
+	a = String(s).split("\n");
+	for (var i = 0; i < a.length; i++) {
+		var l = String(a[i]).split("=");
+		WLT.cfg[l[0]] = l[1];
+	}
+	
+}
+
+
+/*****************************
+ * get device configuration to prepare sending changes
+ */
+function getWLTcfg(callback) {
+	callback = (typeof(callback) === 'function') ? callback : function() {};
+
+    var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/config.php";
+
+    adapter.log.debug("getWLTcfg");
+
+    if (!getwltcfg_active) {
+        getwltcfg_active=true;
+		WLT.wlt = {};
+		WLT[pathStatus].rc = -1;
+		
+		try {
+			var request = require("request");
+			var options = {
+				url: url,
+				timeout: adapter.config.timeout_GET
+			};
+			
+			request( options, function (error, response, result) {
+				WLT[pathStatus].rc = Number(response && response.statusCode);
+				if (!error && WLT[pathStatus].rc == 200) { 
+					parseWLTcfg(String(result));
+					WLT[pathStatus].reachable = true;
+				}
+					
+				if (error) {
+					WLT[pathStatus].answer = String(error);
+					WLT[pathStatus].reachable = false;
+					adapter.log.warn("getWLTcfg: " + WLT[pathStatus].answer + ".");
+				}
+				getwltcfg_active=false;
+				callback(error, WLT[pathStatus].answer);
+			});
+		} catch (e) {
+				WLT[pathStatus].answer = "GET Req: " + e.toString();
+				WLT[pathStatus].rc = -1;
+				WLT[pathStatus].reachable = false;
+				getwltcfg_active=false;
+				adapter.log.error("getWLTcfg: " + WLT[pathStatus].answer + ".");
+				callback(e, WLT[pathStatus].answer);
+		}
+    } else {
+		adapter.log.warn("getWLTcfg already running");
+		callback(null, WLT[pathStatus].answer);
+	}
+}
+
+
+/*****************************
+ * send configuration data to WLT device
+ */
+postWLTcfg(callback) {
+	adapter.log.error("TODO: postWLTcfg()");
+}
 
 //-EOF-
