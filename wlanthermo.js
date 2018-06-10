@@ -34,7 +34,7 @@ var WLT = {"wlt": {}, "cfg": {}};
 
 var utils = require(__dirname + '/lib/utils'); // Get common adapter utils
 var adapter = new utils.Adapter('wlanthermo');
-var mySysID = "system.adapter." + adapter.name + "." + adapter.instance;
+var mySysID = "";
 
 
 // is called when adapter shuts down - callback has to be called under any circumstances!
@@ -777,6 +777,8 @@ function initGlobalAlarms(callback=null) {
 function initBasics(callback) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 	adapter.log.debug('initBasics');
+
+	mySysID = "system.adapter." + adapter.name + "." + adapter.instance;
 
 	// WLANThermo mini hardware configuration. Think first before changing this.
 	if (typeof(adapter.config.maxChannels) === "undefined") adapter.config.maxChannels = 11;  // 0-n
@@ -1758,11 +1760,20 @@ function parseWLTcfg(cs = "") {
 	s = String(s).replace(/".*/gi, "");
 
 	a = String(s).split("\n");
+
 	for (var i = 0; i < a.length; i++) {
 		var l = String(a[i]).split("=");
-		WLT.cfg[l[0]] = l[1];
+		switch (l[0]) {
+			case "save":
+			case "back":
+			case "upload_file":
+			case "MAX_FILE_SIZE":
+				break;
+			default:
+				WLT.cfg[l[0]] = l[1];
+				break;
+		}
 	}
-	
 }
 
 
@@ -1821,8 +1832,9 @@ function getWLTcfg(callback) {
 /*****************************
  * send configuration data to WLT device
  */
-postWLTcfg(callback) {
+function postWLTcfg(callback) {
 	adapter.log.error("TODO: postWLTcfg()");
+	adapter.log.error("I AM " + mySysID + ".");
 }
 
 //-EOF-
