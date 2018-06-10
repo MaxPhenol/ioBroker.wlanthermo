@@ -53,7 +53,7 @@ The device is monitored as configured. If it is not reachable, the state "reacha
 
 ## Changelog
 
-### 0.1.0 (2018-06-06)
+### 0.1.0 (2018-06-10)
 * (maxp) initial adapter rlease
 
 ### 0.0.x
