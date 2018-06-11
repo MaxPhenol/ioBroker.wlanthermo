@@ -17,12 +17,14 @@ var pathStatus   = "device";
 var timer_monitoring = null;
 var timer_timeouts = null;
 var timer_temps = null;
+var timer_postwlt = null;
 var initAnswer = "So long and thanks for all the fish!";
 
 var checkwlt_active = false;
 var pollwlt_active = false;
 var newLogfile_active = false;
 var getwltcfg_active = false;
+var postwltcfg_active = false;
 var cond_update = "ne";
 var cond_update_temp = "any";
 
@@ -295,11 +297,14 @@ function stateUpdateHandler(id, state, callback) {
 				case 'temp_min':
 				case 'temp_max':
 					if (state.val !== ov) {
-						wlt2cfg();
 						handleChannelUpdate(a[3], state);
 						if (state.from !== mySysID) {
 							adapter.log.info("foreign update on channel " + a[3] + ": " + a[4] + "=" + state.val + " origin="+state.from);
-							postWLTcfg();
+							getWLTcfg(function() {
+								//wlt2cfg();
+								WLT.cfg[a[4] + a[3]] = state.val;
+								prepWLTpost();
+							});
 						}
 					}
 					break;
@@ -329,6 +334,21 @@ function stateUpdateHandler(id, state, callback) {
 						handleGlobalAck(state.val);
 					else
 						handleChannelUpdate(a[3], state);
+				case 'name':
+					adapter.log.error("AAA");
+					if (state.val !== ov) {
+						adapter.log.error("BBB");
+						if (state.from !== mySysID) {
+							adapter.log.error("CCC");
+							adapter.log.info("foreign update on channel " + a[3] + ": " + a[4] + "=" + state.val + " origin="+state.from);
+							getWLTcfg(function() {
+								//wlt2cfg();
+								WLT.cfg["tch" + a[3]] = state.val;
+								prepWLTpost();
+							});
+						}
+					}
+					break;
 				default:
 					break;
 			}
@@ -816,6 +836,10 @@ function initBasics(callback) {
 	if (typeof(adapter.config.timeout_device_off) === "undefined") adapter.config.timeout_device_off = 300; 
 	if (typeof(adapter.config.timeout_device_off_min) === "undefined") adapter.config.timeout_device_off_min = 30; // minimum acceptable
 	
+	// delay before sending POSTs to WLT device in seconds.
+	if (typeof(adapter.config.delayPOST) === "undefined") adapter.config.delayPOST=4;
+	if (adapter.config.delayPOST < 2) adapter.config.delayPOST = 2;
+	if (adapter.config.delayPOST > 10) adapter.config.delayPOST = 10;
 
 	
 	callback(null);
@@ -1312,10 +1336,9 @@ function newLogfile(callback=null) {
 
 	adapter.log.info("newLogfile");
 	if (newLogfile_active) {
-		callback("newLogfile alrady running");
+		callback("newLogfile already running");
 		return;
 	}
-	adapter.log.info('newLogfile: url='+url);
 	newLogfile_active = true;
 	try {
 		var request = require("request");
@@ -1334,7 +1357,6 @@ function newLogfile(callback=null) {
             
 		request(options, function (error, response, body) {
 			WLT[pathStatus].rc = Number(response && response.statusCode);
-			//adapter.log.info(body);
 			if (!error && WLT[pathStatus].rc === 200) {
 				WLT[pathStatus].answer = "New logfile requested";
 				WLT[pathStatus].reachable = true;
@@ -1353,7 +1375,7 @@ function newLogfile(callback=null) {
 			}
 		});
 	} catch (e) { 
-		WLT[pathStatus].answer = "checkWLT: " + e.toString();
+		WLT[pathStatus].answer = "newLogfile: " + e.toString();
 		WLT[pathStatus].reachable = false;
 		newLogfile_active = false;
 		adapter.log.error("newLogfile: " + WLT[pathStatus].answer + ".");
@@ -1395,7 +1417,6 @@ function checkWLT(callback=null) {
                     WLT[pathStatus].answer = result[0].replace(/<\/?[^>]+(>|$)/g, "");
                     WLT[pathStatus].reachable = true;
                     adapter.log.debug("checkWLT: " + WLT[pathStatus].answer + ".");
-					getWLTcfg();
                 } else {
                     WLT[pathStatus].reachable = false;
                     if (error)
@@ -1495,13 +1516,17 @@ function pollWLT(callback) {
 /*****************************
  * Handle updates in WLT.wlt and copy values to WLT.cfg
  */
-function wlt2cfg() {
+function wlt2cfg(callback) {
 	var i;
-	for (i=0; i<adapter.config.maxChannels; i++) {
+	callback = (typeof(callback) === 'function') ? callback : function() {};
+	
+	for (i=0; i<=adapter.config.maxChannels; i++) {
 		WLT.cfg["temp_min" + i] = WLT.channels[i].temp_min
 		WLT.cfg["temp_max" + i] = WLT.channels[i].temp_max
 		WLT.cfg["tch" + i] = WLT.channels[i].name
 	}
+	
+	callback();
 }
 
 
@@ -1745,86 +1770,254 @@ function checkTimeout() {
 
 
 /*****************************
- * parse config.php page and retrieve needed settings
- */
-function parseWLTcfg(cs = "") {
-	var s;
-	var a;
-
-	if (cs === "") return;
-	
-	s = cs.match(/<input.*>/gi);
-	s = String(s).replace(/<input/gi, "\n");
-	s = String(s).replace(/.*name="/gi, "");
-	s = String(s).replace(/".*value="/gi, "=");	
-	s = String(s).replace(/".*/gi, "");
-
-	a = String(s).split("\n");
-
-	for (var i = 0; i < a.length; i++) {
-		var l = String(a[i]).split("=");
-		switch (l[0]) {
-			case "save":
-			case "back":
-			case "upload_file":
-			case "MAX_FILE_SIZE":
-				break;
-			default:
-				WLT.cfg[l[0]] = l[1];
-				break;
-		}
-	}
-}
-
-
-/*****************************
  * get device configuration to prepare sending changes
  */
 function getWLTcfg(callback) {
+    var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/conf/WLANThermo.conf";
 	callback = (typeof(callback) === 'function') ? callback : function() {};
-
-    var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/config.php";
 
     adapter.log.debug("getWLTcfg");
 
-    if (!getwltcfg_active) {
-        getwltcfg_active=true;
-		WLT.wlt = {};
-		WLT[pathStatus].rc = -1;
-		
-		try {
-			var request = require("request");
-			var options = {
-				url: url,
-				timeout: adapter.config.timeout_GET
-			};
+    try {
+        require("request")(url, function (error, response, result) {
+            var lines = String(result).split("\n");
+            var nLines = lines.length;
+            var section = "";
+            var _section = "";
+            var token = "";
+            var value = "";
+            var channel = "";
+            var reSectionName = new RegExp("^\s{0,}\\[.*\\]\s{0,}$", "i");
+            WLT.cfg = {};
 			
-			request( options, function (error, response, result) {
-				WLT[pathStatus].rc = Number(response && response.statusCode);
-				if (!error && WLT[pathStatus].rc == 200) { 
-					parseWLTcfg(String(result));
-					WLT[pathStatus].reachable = true;
+            for (var l = 0; l < nLines; l++) {
+                var line = lines[l].trim();
+                if (!line || 0 === line.length) continue;
+                if (line.startsWith("#")) continue;
+                if (line.startsWith(";")) continue;
+                if (_section=line.match(reSectionName)) {    // yes, assignment AND evaluation!
+                    section=String(_section[0]).replace(/[\[\]']+/g, "").trim();
+                    continue;
+                }
+                token = String(line.split("=", 1));
+                value = line.replace(token + "=", "");
+                token = token.trim();
+                value = value.trim();
+                
+				switch (section) {
+					case "Sensoren":
+						WLT.cfg[token.replace("ch", "fuehler")] = value;
+						break;
+					case "Sound":
+						if (value === "true" || value === "True")
+							WLT.cfg[token] = value;
+						break;
+					case "Messen":
+						WLT.cfg[token.replace("messwiderstand", "measuring_resistance")] = value;
+						break;
+					case "Logging":
+						if (token == "write_new_log_on_restart")
+							if (value === "true" || value === "True")
+								WLT.cfg["new_logfile_restart"] = value;
+						break;
+					case "web_alert":
+						if (value === "true" || value === "True")
+							WLT.cfg[token.replace("ch", "alert")] = value;						
+						break;
+					case "ch_name":
+						WLT.cfg[token.replace("ch_name", "tch")] = value;
+						break;
+					case "ch_show":
+						WLT.cfg[token.replace("ch", "ch_show")] = value;
+						break;
+					case "plotter":
+						switch (token) {
+							case "plot_pit":
+							case "plot_pit2":
+							case "keyboxframe":
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							case "color_pit":
+							case "color_pitsoll":
+							case "color_pit2":
+							case "color_pit2soll":
+							case "plotbereich_min":
+							case "plotbereich_max":
+							case "plotsize":
+							case "plotname":
+							case "keybox":
+								WLT.cfg[token] = value;
+								break;
+							default:
+								WLT.cfg[token.replace("color_ch", "plot_color")] = value;
+								break;
+						}
+						break;
+					case "webcam":
+						switch (token) {
+							case "webcam_start" :
+							case "raspicam_start" :
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							default:
+								WLT.cfg[token] = value;
+								break;
+						}
+						break;
+					case "ToDo":
+						switch (token) {
+							case "plot_start":
+							case "maverick_enabled":
+							case "pit_on":
+							case "pit2_on":
+								if (value == "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							default:
+								break;
+						}			
+						break;
+					case "temp_min":
+					case "temp_max":
+						WLT.cfg[token] = value;
+						break;
+					case "Alert":
+						// not needed: WLT.cfg[token] = value;
+						break;
+					case "Email":
+						switch (token) {
+							case "email_alert":
+								if (value === "true" || value === "True")
+									WLT.cfg["email"] = value;
+								break;
+							case "starttls":
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							case "auth":
+								if (value === "true" || value === "True")
+									WLT.cfg["auth_check"] = value;
+								break;
+							default:
+								// not needed: WLT.cfg[token] = value;
+								break;
+						}
+						break;
+					case "Push":
+						switch (token) {
+							case "push_on":
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							default:
+								// not needed: WLT.cfg[token] = value;
+								break;							
+						}
+						break;
+					case "Telegram":
+						switch (token) {
+							case "telegram_alert":
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							default:
+								// not needed: WLT.cfg[token] = value;
+								break;							
+						}
+						break;
+					case "Display":
+						switch (token) {
+							case "lcd_present":
+								if (value === "true" || value === "True")
+									WLT.cfg["lcd_show"] = value;								
+								break;
+							case "nextion_update_enabled":
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;
+								break;
+							default:
+								// not needed: WLT.cfg[token] = value;
+								break;							
+						}
+						break;
+					case "Pitmaster":
+						switch (token) {
+							case "pit_shutdown":
+							case "pit_controller_type":
+							case "pit_open_lid_detection":
+							case "pit_inverted":
+							case "pit_servo_inverted":
+								WLT.cfg[token] = value;
+							break;
+						default:
+							// not needed: WLT.cfg[token] = value;
+							break;
+						}
+						break;
+					case "Pitmaster2":
+						switch (token) {
+							case "pit_shutdown":
+							case "pit_controller_type":
+							case "pit_open_lid_detection":
+							case "pit_inverted":
+							case "pit_servo_inverted":
+								WLT.cfg[token + "2"] = value;
+							break;
+						default:
+							// not needed: WLT.cfg[token] = value;
+							break;
+						}
+						break;
+					case "Hardware":
+						switch (token) {
+							case "version":
+								WLT.cfg["hardware_version"] = value;
+								break
+							case "max31855":
+							case "showcpulast":
+								if (value === "true" || value === "True")
+									WLT.cfg[token] = value;								
+								break;
+							default:
+								WLT.cfg[token] = value;
+								break;
+						}
+						break;
+					case "update":
+						switch (token) {
+							case "checkupdate":
+								if (value === "true" || value === "True")
+									WLT.cfg["checkUpdate"] = value;
+								break;
+							default:
+								break;
+						}
+						break;
+					case "locale":
+						switch (token) {
+							case "locale":
+								WLT.cfg["language"] = value;
+								break;
+							default:
+								WLT.cfg[token] = value;
+								break;							
+						}
+						break;
+					default:
+						break;
 				}
-					
-				if (error) {
-					WLT[pathStatus].answer = String(error);
-					WLT[pathStatus].reachable = false;
-					adapter.log.warn("getWLTcfg: " + WLT[pathStatus].answer + ".");
+            }
+			callback(null);
+        }).on("error", function (e) {
+					adapter.log.warn("Error reading device config: " + e);
+					callback(e);
 				}
-				getwltcfg_active=false;
-				callback(error, WLT[pathStatus].answer);
-			});
-		} catch (e) {
-				WLT[pathStatus].answer = "GET Req: " + e.toString();
-				WLT[pathStatus].rc = -1;
-				WLT[pathStatus].reachable = false;
-				getwltcfg_active=false;
-				adapter.log.error("getWLTcfg: " + WLT[pathStatus].answer + ".");
-				callback(e, WLT[pathStatus].answer);
-		}
-    } else {
-		adapter.log.warn("getWLTcfg already running");
-		callback(null, WLT[pathStatus].answer);
+			);
+    } catch (e) { 
+		adapter.log.warn("Error reading device config: " + e);
+		callback(e);
 	}
 }
 
@@ -1833,8 +2026,74 @@ function getWLTcfg(callback) {
  * send configuration data to WLT device
  */
 function postWLTcfg(callback) {
-	adapter.log.error("TODO: postWLTcfg()");
-	adapter.log.error("I AM " + mySysID + ".");
+	var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/config.php";
+	callback = (typeof(callback) === 'function') ? callback : function() {};
+
+	adapter.log.info("postWLTcfg");
+
+	if (timer_postwlt)
+		clearInterval(timer_postwlt);
+   
+	if (postwltcfg_active) {
+		callback("postCFGwlt already running");
+		return;
+	}
+	
+	WLT.cfg["save"] = "submit";
+	postwltcfg_active = true;
+	
+	
+	try {
+		var request = require("request");
+		var myheaders = { "content-type": "application/json", };
+		var options = {
+			method: 'post',
+			url: url,
+			form: WLT.cfg,
+			headers: myheaders,
+			json: true,
+			timeout: adapter.config.timeout_GET,
+		};
+            
+		request(options, function (error, response, body) {
+			WLT[pathStatus].rc = Number(response && response.statusCode);
+			if (!error && WLT[pathStatus].rc === 200) {
+				WLT[pathStatus].answer = "Einstellungen übertragen";
+				WLT[pathStatus].reachable = true;
+				adapter.log.info("postWLTcfg: " + WLT[pathStatus].answer + ".");
+				postwltcfg_active = false;
+				callback(null);
+			} else {
+				WLT[pathStatus].reachable = false;
+				if (error) 
+					WLT[pathStatus].answer = "[" + (response && response.statusCode) + "] " + String(error);
+				else
+					WLT[pathStatus].answer = "[" + (response && response.statusCode) + "] HTTP error";
+				adapter.log.warn("postWLTcfg: " + WLT[pathStatus].answer + ".");
+				postwltcfg_active = false;
+				callback(WLT[pathStatus].answer);
+			}
+		});
+	} catch (e) { 
+		WLT[pathStatus].answer = "postWLTcfg: " + e.toString();
+		WLT[pathStatus].reachable = false;
+		postwltcfg_active = false;
+		adapter.log.error("postWLTcfg: " + WLT[pathStatus].answer + ".");
+		callback(e);
+	}
+}
+
+
+/*****************************
+ * set timer to upate WLT device.
+ * if timer exists already, remove it and set a new one.
+ * idea: do not send updates to WLT device more often than every 3 seconds or so.
+ */
+function prepWLTpost(callback) {
+	if (timer_postwlt)
+		clearInterval(timer_postwlt);
+	timer_postwlt = setInterval(function(){ postWLTcfg(callback) }, adapter.config.delayPOST * 1000);
+	adapter.log.info("prepWLTpost: will POST in " + adapter.config.delayPOST + " seconds.");
 }
 
 //-EOF-

@@ -40,7 +40,8 @@
 		"interval_temps": 5,
 		"interval_timeouts": 10,
 		"timeout_temps": 30,
-		"timeout_device_off": 300
+		"timeout_device_off": 300,
+		"delayPOST" : 4
     },
     "objects": [],
     "instanceObjects": [

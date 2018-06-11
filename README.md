@@ -28,6 +28,8 @@ Watch the graphs on how the core meat temperature rises. When the desired core t
 
 ## How to use
 
+(Please check CHANGELOG for notes on experimental features)
+
 ### Installation
 
 Log in to your ioBroker, go to adapters in admin panel, click on the github icon and install it from this (custom) URL: https://github.com/MaxPhenol/ioBroker.wlanthermo.git
@@ -41,6 +43,9 @@ Or via npm:
 The adapter requires some basic configuration, available in the adapter settings via ioBroker's admin panel: hostname or IP address of your WLANThermo, as well as the user and password to access the device' web frontend.
 When done, the adapter starts to work. Intervals and timeouts can get configured under "Settings" in the object tree (Objects tab).
 
+A simple default vis view definition is provided in directory vis: https://github.com/MaxPhenol/ioBroker.wlanthermo/tree/master/vis
+
+
 ### Alarming
 
 Each time temperature updates come in, alarms are evaluated. Min/max as well as a general alarm for each channel. The "global" channel is a kind of a summary of all channels, if you prefer just global alarming.
@@ -49,15 +54,6 @@ Be aware of the following: after reset/startup, a channel remains inactive (acti
 ### Monitoring
 
 The device is monitored as configured. If it is not reachable, the state "reachable" is set to false. Moreover, if there is no temperature update for a certain time, the state "alarm_timeout" gets true.
-
-
-## Changelog
-
-### 0.1.0 (2018-06-10)
-* (maxp) initial adapter rlease
-
-### 0.0.x
-* (maxp) initial releases, as scripts for JavaScript Adapter
 
 
 ## Legal Notice
