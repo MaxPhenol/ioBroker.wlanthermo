@@ -1418,7 +1418,7 @@ function newLogfile(callback=null) {
  * Check WLT device to see if it is available and answering in general
  */
 function checkWLT(callback=null) {
-    var url = "http://" + adapter.config.hostname + "/";
+	var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/wifi.php";
 
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 
@@ -1444,9 +1444,77 @@ function checkWLT(callback=null) {
             
                 WLT[pathStatus].rc = Number(response && response.statusCode);
                 if (found) {
+					var s;
                     WLT[pathStatus].answer = result[0].replace(/<\/?[^>]+(>|$)/g, "");
                     WLT[pathStatus].reachable = true;
                     adapter.log.debug("checkWLT: " + WLT[pathStatus].answer + ".");
+
+					s = String(body).match(/IP Address :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/IP Address\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						WLT[pathStatus].ip_address=s[0].trim();
+					} else WLT[pathStatus].ip_address="0.0.0.0";
+					
+					s = String(body).match(/Subnet Mask :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/Subnet Mask\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						WLT[pathStatus].ip_subnet=s[0].trim();
+					} else WLT[pathStatus].ip_subnet="0.0.0.0";
+
+					s = String(body).match(/Mac Address :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/Mac Address\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						WLT[pathStatus].macaddr=s[0].trim();
+					} else WLT[pathStatus].macaddr="00:00:00:00:00:00";
+
+					s = String(body).match(/Connected To :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/Connected To\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						WLT[pathStatus].wifi_ssid=s[0].trim();
+					} else WLT[pathStatus].wifi_ssid="-";
+
+					s = String(body).match(/AP Mac Address :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/AP Mac Address\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						WLT[pathStatus].wifi_bssid=s[0].trim();
+					} else WLT[pathStatus].wifi_bssid="00:00:00:00:00:00";
+
+					s = String(body).match(/Bitrate :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/Bitrate\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						s[0] = String(s[0]).replace(/ .*/g, "");
+						WLT[pathStatus].wifi_bitrate=s[0].trim();
+					} else WLT[pathStatus].wifi_bitrate=-1;
+
+					s = String(body).match(/Link Quality :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/Link Quality\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						s[0] = String(s[0]).replace(/\/100/g, "");
+						WLT[pathStatus].wifi_link=s[0].trim();
+					} else WLT[pathStatus].wifi_link=-1;
+
+					s = String(body).match(/Signal Level :\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/Signal Level\s+:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						s[0] = String(s[0]).replace(/\/100/g, "");
+						WLT[pathStatus].wifi_signal=s[0].trim();
+					} else WLT[pathStatus].wifi_signal=-1;
+
+					s = String(body).match(/TX Power ?:\s+<b>.*<.b><br.*/i, "");
+					if (s) {
+						s[0] = String(s[0]).replace(/TX Power ?:.*<b>/i, "");
+						s[0] = String(s[0]).replace(/<\/?[^>]+(>|$)/g, "");
+						s[0] = String(s[0]).replace(/.*no result.*/g, "-1");
+						WLT[pathStatus].wifi_tx_power=s[0].trim();
+					} else WLT[pathStatus].tx_power=-1;
                 } else {
                     WLT[pathStatus].reachable = false;
                     if (error)
