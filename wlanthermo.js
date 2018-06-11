@@ -267,6 +267,22 @@ function stateUpdateHandler(id, state, callback) {
 					if (state.val) newLogfile(function(){handleWLT(pathStatus);});
 					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].new_logfile = state.val;
+					break;
+				case "wlt_beeper":
+					if (state.val !== ov) {
+						if (state.from !== mySysID) {
+							adapter.log.info("foreign update on switch " + a[3] + ": " + a[4] + "=" + state.val + " origin="+state.from);
+							getWLTcfg(function() {
+								//wlt2cfg();
+								if (state.val)
+									WLT.cfg["beeper_enabled"] = "True";
+								else
+									delete WLT.cfg["beeper_enabled"];
+								prepWLTpost();
+							});
+						}
+					}
+					break;
 				default:
 					oid2obj(WLT, id, state.val);
 					break;
@@ -335,11 +351,8 @@ function stateUpdateHandler(id, state, callback) {
 					else
 						handleChannelUpdate(a[3], state);
 				case 'name':
-					adapter.log.error("AAA");
 					if (state.val !== ov) {
-						adapter.log.error("BBB");
 						if (state.from !== mySysID) {
-							adapter.log.error("CCC");
 							adapter.log.info("foreign update on channel " + a[3] + ": " + a[4] + "=" + state.val + " origin="+state.from);
 							getWLTcfg(function() {
 								//wlt2cfg();
@@ -942,6 +955,23 @@ function initButtons(callback) {
 		}
 	);
 
+	storeState(pathButtons + ".wlt_beeper", {val: false, ack: true}, "nc",
+		{
+        		type: 'state',
+			common: {
+	    			name: "Turn device beeper for temp alarms on/off",
+	    			role: "state",
+	    			type: "boolean",
+	    			read: true,
+	    			write: true
+			},
+			native: {}
+		},
+		function(e, s) {
+			if (!e && s) WLT[pathButtons].wlt_beeper = s.val;
+		}
+	);
+
 	callback(null);
 }
 
@@ -1426,15 +1456,9 @@ function checkWLT(callback=null) {
                     adapter.log.warn("checkWLT: " + WLT[pathStatus].answer + ".");
                 }
                 checkwlt_active = false;
+				getWLTcfg(function() {cfg2wlt()});
 				callback(null);
-            })/******.on("error", 
-                function (e) {
-                    WLT[pathStatus].answer = e.toString();
-                    checkwlt_active = false;
-                    adapter.log.warn("checkWLT: " + WLT[pathStatus].answer + ".");
-					callback(null);
-                }
-            )******/;
+            });
         } catch (e) { 
                 WLT[pathStatus].answer = "checkWLT: " + e.toString();
                 checkwlt_active = false;
@@ -1526,7 +1550,23 @@ function wlt2cfg(callback) {
 		WLT.cfg["tch" + i] = WLT.channels[i].name
 	}
 	
+	if (WLT[pathButtons].wlt_beeper)
+		WLT.cfg["beeper_enabled"] = "True";
+	else
+		delete WLT.cfg["beeper_enabled"];
+
 	callback();
+}
+
+
+/*****************************
+ * store relevant config info as ioBroker states
+ */
+function cfg2wlt(callback) {
+	if (WLT.cfg.beeper_enabled)
+		storeState(pathButtons + ".wlt_beeper", {val: true, ack: true}, "ne");
+	else
+		storeState(pathButtons + ".wlt_beeper", {val: false, ack: true}, "ne");
 }
 
 
@@ -1788,7 +1828,6 @@ function getWLTcfg(callback) {
             var value = "";
             var channel = "";
             var reSectionName = new RegExp("^\s{0,}\\[.*\\]\s{0,}$", "i");
-            WLT.cfg = {};
 			
             for (var l = 0; l < nLines; l++) {
                 var line = lines[l].trim();
@@ -1811,6 +1850,8 @@ function getWLTcfg(callback) {
 					case "Sound":
 						if (value === "true" || value === "True")
 							WLT.cfg[token] = value;
+						else
+							delete WLT.cfg[token];
 						break;
 					case "Messen":
 						WLT.cfg[token.replace("messwiderstand", "measuring_resistance")] = value;
@@ -1819,10 +1860,14 @@ function getWLTcfg(callback) {
 						if (token == "write_new_log_on_restart")
 							if (value === "true" || value === "True")
 								WLT.cfg["new_logfile_restart"] = value;
+							else
+								delete WLT.cfg["new_logfile_restart"];
 						break;
 					case "web_alert":
 						if (value === "true" || value === "True")
-							WLT.cfg[token.replace("ch", "alert")] = value;						
+							WLT.cfg[token.replace("ch", "alert")] = value;
+						else
+							delete WLT.cfg[token.replace("ch", "alert")];
 						break;
 					case "ch_name":
 						WLT.cfg[token.replace("ch_name", "tch")] = value;
@@ -1837,6 +1882,8 @@ function getWLTcfg(callback) {
 							case "keyboxframe":
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							case "color_pit":
 							case "color_pitsoll":
@@ -1860,6 +1907,8 @@ function getWLTcfg(callback) {
 							case "raspicam_start" :
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							default:
 								WLT.cfg[token] = value;
@@ -1874,6 +1923,8 @@ function getWLTcfg(callback) {
 							case "pit2_on":
 								if (value == "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							default:
 								break;
@@ -1891,14 +1942,20 @@ function getWLTcfg(callback) {
 							case "email_alert":
 								if (value === "true" || value === "True")
 									WLT.cfg["email"] = value;
+								else
+									delete WLT.cfg["email"];
 								break;
 							case "starttls":
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							case "auth":
 								if (value === "true" || value === "True")
 									WLT.cfg["auth_check"] = value;
+								else
+									delete WLT.cfg["auth_check"];
 								break;
 							default:
 								// not needed: WLT.cfg[token] = value;
@@ -1910,6 +1967,8 @@ function getWLTcfg(callback) {
 							case "push_on":
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							default:
 								// not needed: WLT.cfg[token] = value;
@@ -1921,6 +1980,8 @@ function getWLTcfg(callback) {
 							case "telegram_alert":
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							default:
 								// not needed: WLT.cfg[token] = value;
@@ -1932,10 +1993,14 @@ function getWLTcfg(callback) {
 							case "lcd_present":
 								if (value === "true" || value === "True")
 									WLT.cfg["lcd_show"] = value;								
+								else
+									delete WLT.cfg["lcd_show"];
 								break;
 							case "nextion_update_enabled":
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;
+								else
+									delete WLT.cfg[token];
 								break;
 							default:
 								// not needed: WLT.cfg[token] = value;
@@ -1979,6 +2044,8 @@ function getWLTcfg(callback) {
 							case "showcpulast":
 								if (value === "true" || value === "True")
 									WLT.cfg[token] = value;								
+								else
+									delete WLT.cfg[token];
 								break;
 							default:
 								WLT.cfg[token] = value;
@@ -1990,6 +2057,8 @@ function getWLTcfg(callback) {
 							case "checkupdate":
 								if (value === "true" || value === "True")
 									WLT.cfg["checkUpdate"] = value;
+								else
+									delete WLT.cfg["checkUpdate"];
 								break;
 							default:
 								break;
