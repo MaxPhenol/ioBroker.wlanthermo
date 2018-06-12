@@ -350,6 +350,7 @@ function stateUpdateHandler(id, state, callback) {
 						handleGlobalAck(state.val);
 					else
 						handleChannelUpdate(a[3], state);
+					break;
 				case 'name':
 					if (state.val !== ov) {
 						if (state.from !== mySysID) {
@@ -485,6 +486,63 @@ function initPits(callback) {
 	for (var i=1; i<=adapter.config.maxPits; i++) initPit(i, callback)
 	
 	callback(null);
+}
+
+
+/*****************************
+ * activate/deactivate history logging of temperatures in a certain channel
+ */
+function setChannelHistory(channel, active=false) {
+	var oHist = {
+        enabled: active,
+        changesOnly: false,
+        debounce: 100,
+        maxLength: 960,
+        retention: 7948800,
+        changesRelogInterval: 30,
+        changesMinDelta: 0
+      };
+	var oInflux = {
+        enabled: active,
+        changesOnly: false,
+        debounce: 100,
+        retention: 7948800,
+        changesRelogInterval: 30,
+        changesMinDelta: 0,
+        storageType: ""
+      };
+	var keys=["temp", "temp_min", "temp_max"];
+	adapter.log.debug("setChannelHistoy: " + channel + ": " + active);
+	
+	if (typeof(channel) === "undefined") return;
+	if (channel === null) return;
+	
+	for (var k=0; k<keys.length; k++) {
+		var oid = pathChannels + "." + channel + "." + keys[k];
+		adapter.getObject(oid, function (e, o) {
+			if (o) {
+				if (typeof(o.common) === "undefined") o.common = {};  // safety first
+				if (typeof(o.common.custom) === "undefined") o.common.custom = {}; // safety first
+				if (typeof(o.common.custom["influxdb.0"]) === "undefined") o.common.custom["influxdb.0"] = oInflux;
+				if (typeof(o.common.custom["history.0"]) === "undefined") o.common.custom["history.0"] = oHist;
+				o.common.custom["history.0"].enabled = active;
+				o.common.custom["influxdb.0"].enabled = active;
+				
+				adapter.log.debug("setChannelHistoy: " + oid + ": " + o.common.custom["history.0"].enabled);
+				adapter.setObject(oid, o);
+			}
+		});
+	}
+}
+
+
+/*****************************
+ * activate/deactivate history logging of temperatures in ALL channels
+ */
+function setChannelsHistory(active=false) {
+	adapter.log.info("setChannelsHistoy: " + active);
+	for (var c=0; c<=adapter.config.maxChannels; c++)
+		setChannelHistory(c, active);
 }
 
 
@@ -1346,6 +1404,7 @@ function reset(callback=null) {
 	initGlobalAlarms();
 	
 	wait4init(function(){
+		setChannelsHistory(WLT[pathStatus].active);
 		startTimers();
 		if (WLT[pathStatus].active)
 			checkWLT(function(){handleWLT("pathStatus");});
@@ -1816,11 +1875,11 @@ function handleGlobalAck(ga) {
 	for (var i = 0; i <= adapter.config.maxChannels ; i++) {
 		if (WLT[pathChannels][i].alarm && WLT[pathChannels][i].active) {
 			WLT[pathChannels][i].ack = ga;
-			storeState(oid + ".ack", {val: ga, ack: true}, cond_update);
+			storeState(pathChannels + "." + i + ".ack", {val: ga, ack: true}, cond_update);
 		}
 		if (!WLT[pathChannels][i].alarm || !ga) {
 			WLT[pathChannels][i].ack = false;
-			storeState(oid + ".ack", {val: false, ack: true}, cond_update);
+			storeState(pathChannels + "." + i + ".ack", {val: false, ack: true}, cond_update);
 		}
 	}
 }
