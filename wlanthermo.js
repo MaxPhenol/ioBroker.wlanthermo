@@ -389,12 +389,18 @@ function createEmptyObject(n, t, callback) {
  * cond: any=always, ne=not equal, nc=no change, only if not exist
  * obj: object to be defined if it does not already exist
  */
-function storeState(oid, state={"val": null, "ack": true}, cond="ne", obj, callback) {
+function storeState(oid, state, cond, obj, callback) {
 	//adapter.log.debug("storeState(" + oid + ", " + JSON.stringify(state) + ", " + cond + ", " + JSON.stringify(obj) + ")");
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 	
+	if (typeof(cond) !== 'string')
+		cond = "ne";
+	
+	if (typeof(state) === 'undefined')
+		state = {"val": null, "ack": true};
+	
 	// self-protection
-	if (state && typeof(state) !== 'object' && typeof(state) !== 'undefined') {
+	if (state && typeof(state) !== 'object') {
 		var v = state;
 		state = {val: v, ack: true};
 		adapter.log.warn('storeState: converted value to state object: ' + v);
@@ -469,7 +475,7 @@ function initPits(callback) {
 /*****************************
  * activate/deactivate history logging of temperatures in a certain channel
  */
-function setStateHistory(oid, active=false) {
+function setStateHistory(oid, active) {
 	var oHist = {
         enabled: active,
         changesOnly: false,
@@ -488,6 +494,10 @@ function setStateHistory(oid, active=false) {
         changesMinDelta: 0,
         storageType: ""
       };
+	  
+	if (typeof(active) !== "boolean")
+		active ="ne";
+	
 	adapter.log.debug("setStateHistory: " + oid + ": " + active);
 	
 	if (typeof(oid) === "undefined") return;
@@ -510,8 +520,10 @@ function setStateHistory(oid, active=false) {
 /*****************************
  * activate/deactivate history logging of temperatures in ALL channels
  */
-function setHistory(active=false) {
+function setHistory(active) {
 	adapter.log.info("setHistoy: " + active);
+	if (typeof(active) !== 'boolean')
+		active=false;
 	for (var c=0; c<=adapter.config.maxChannels; c++) {
 		setStateHistory(pathChannels + "." + c + ".temp", active);
 		setStateHistory(pathChannels + "." + c + ".temp_min", active);
@@ -828,7 +840,7 @@ function initAlarms(callback) {
 /*****************************
  * initialize global alarms
  */
-function initGlobalAlarms(callback=null) {
+function initGlobalAlarms(callback) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 	adapter.log.debug('initGlobalAlarms');
 	initAlarm('global', callback);
@@ -1123,7 +1135,7 @@ function initSettings() {
 /*****************************
  * initialize status information
  */
-function initStatus(callback=null) {
+function initStatus(callback) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 	adapter.log.debug('initStatus');
 	
@@ -1378,7 +1390,7 @@ function initTimers(callback) {
 /******************************
  * reset everything
  */
-function reset(callback=null) {
+function reset(callback) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 	adapter.log.info('reset');
 
@@ -1410,7 +1422,7 @@ function reset(callback=null) {
 /*****************************
  * Ask WLANThermo to create a new log file
  */
-function newLogfile(callback=null) {
+function newLogfile(callback) {
 	var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/new_log_file.php";
     
 	callback = (typeof(callback) === 'function') ? callback : function() {};
@@ -1468,7 +1480,7 @@ function newLogfile(callback=null) {
 /*****************************
  * Check WLT device to see if it is available and answering in general
  */
-function checkWLT(callback=null) {
+function checkWLT(callback) {
 	var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/wifi.php";
 
 	callback = (typeof(callback) === 'function') ? callback : function() {};
@@ -1746,10 +1758,13 @@ function cfg2wlt(callback) {
  * Handle updates that went into global WLT object
  * literally write WLT to states
  */
-function handleWLT(what="all", callback=null) {
+function handleWLT(what, callback) {
     var key;
     var objpath;
 
+	if (typeof(what) !== 'string')
+		what = "all";
+	
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 
     adapter.log.debug("handleWLT(" + what + ")");
@@ -1815,7 +1830,7 @@ function handleWLT(what="all", callback=null) {
 /*****************************
  * recursively loop throuth wlt object and call storeState()
  */
-function loopWLT(wlt, p, callback=null) {
+function loopWLT(wlt, p, callback) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
     adapter.log.debug("loopWLT(" + wlt + ", " + p + ", " + ").");
 
