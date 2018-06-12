@@ -1,8 +1,8 @@
-/**
+/****
  * wlanthermo adapter
  * used iobroker template to start: https://github.com/ioBroker/ioBroker.template
  *
- */
+ ****/
 
 /* jshint -W097 */// jshint strict:false
 /*jslint node: true */
@@ -51,23 +51,6 @@ adapter.on('unload', function (callback) {
 });
 
 
-//----------------------------
-// Some message was sent to adapter instance over message box.
-// Used by email, pushover, text2speech, ...
-//
-adapter.on('message', function (obj) {
-    if (typeof obj === 'object' && obj.message) {
-        if (obj.command === 'send') {
-            // e.g. send email or pushover or whatever
-            console.log('send command');
-
-            // Send response in callback if required
-            if (obj.callback) adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-        }
-    }
-});
-
-
 //---------------------------- 
 // Adapter got ready
 //
@@ -102,19 +85,24 @@ function oid2obj(obj, oid, val, callback) {
 
 
 /*****************************
- * copiels object src to obj dst
+ * copies object src to obj dst
  */
-function cpObj(dst={}, obj, callback) {
+function cpObj(dst, src, callback) {
 	var d=dst;
-	var o=obj;
+	var s=src;
 	var k;
 	
-	if (typeof(o) === 'object')
-		for (k in o) {
-			if (typeof(o[k]) === 'object') {
+	if (typeof(dst) === 'undefined') {
+		dst = {};
+		d = dst;
+	}
+	
+	if (typeof(s) === 'object')
+		for (k in s) {
+			if (typeof(s[k]) === 'object') {
 				d[k] = {};
-				cpObj(d[k], o[k])
-			} else d[k] = o[k];
+				cpObj(d[k], s[k])
+			} else d[k] = s[k];
 		}
 	
 	if (typeof(callback) === 'function') callback(null, dst);
@@ -197,25 +185,8 @@ function installUpdateHandlers(callback) {
 	adapter.log.info("installUpdateHandlers");
 	adapter.subscribeStates('*');	
 	adapter.on('stateChange', function(id, state) { stateUpdateHandler(id, state); });
-
-	/** not used yet
-	adapter.on('objectChange', function (id, obj) { objectUpdateHandler(id, obj); });
-	**/
-
 	if (typeof(callback) === 'function') callback(null);
 }
-
-
-/*****************************
- * object update hanlder
- */
-/** no used yet
-function objectUpdateHandler(id, obj, callback) {}	
-	// Warning, obj can be null if it was deleted
-	adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
-	if (typeof(callback) === 'function') callback(null);
-}
-**/
 
 	
 /*****************************
@@ -241,7 +212,7 @@ function stateUpdateHandler(id, state, callback) {
 			switch (a[3]) {
 				case "reset":
 					adapter.log.info('Button: reset=' + state.val);
-					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					storeState(id, {val: false, ack: true}, "ne");
 					if (state.val) reset();
 					WLT[pathButtons].reset = state.val;
 					break;
@@ -253,25 +224,25 @@ function stateUpdateHandler(id, state, callback) {
 				case "poll_temps":
 					adapter.log.info('Button: poll_temps=' + state.val);
 					if (state.val) pollWLT(function(){handleWLT("wlt");});
-					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					storeState(id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].poll_temps = state.val;
 					break;
 				case "check_wlt":
 					adapter.log.info('Button: check_wlt=' + state.val);
 					if (state.val) checkWLT(function(){handleWLT(pathStatus);});
-					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					storeState(id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].check_wlt = state.val;
 					break;
 				case "new_logfile":
 					adapter.log.info('Button: new_logfile=' + state.val);
 					if (state.val) newLogfile(function(){handleWLT(pathStatus);});
-					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					storeState(id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].new_logfile = state.val;
 					break;
 				case "reboot_wlt":
 					adapter.log.warn('Button: reboot_wlt=' + state.val)
 					if (state.val) rebootWLT();
-					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					storeState(id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].new_logfile = state.val;
 					break;
 				case "wlt_beeper":
@@ -457,7 +428,7 @@ function storeState(oid, state={"val": null, "ack": true}, cond="ne", obj, callb
 			});
 		} else if (typeof(obj) === "object" && obj !== null) {    // need to double-check null!!
 			adapter.log.debug('storeState: Object to be created: ' + oid + ': ' + JSON.stringify(obj));
-			adapter.setObject(oid, obj, function(e, o) { 
+			adapter.setObjectNotExists(oid, obj, function(e, o) { 
 				adapter.log.debug('calling storeState() again after object creation: '+ oid + ", " + JSON.stringify(state) + ", " + cond + ", " + JSON.stringify(null) + ")");
 				storeState(oid, state, cond, null, callback);
 			});
@@ -530,7 +501,7 @@ function setStateHistory(oid, active=false) {
 			if (typeof(o.common.custom["history.0"]) === "undefined") o.common.custom["history.0"] = oHist;
 			o.common.custom["history.0"].enabled = active;
 			o.common.custom["influxdb.0"].enabled = active;			
-			adapter.setObject(oid, o);
+			adapter.setObjectNotExists(oid, o);
 		}
 	});
 }
