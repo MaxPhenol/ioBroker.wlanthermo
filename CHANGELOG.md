@@ -9,6 +9,7 @@
 * (maxp) NEW: some more details in device status
 * (maxp) NEW: temperatures (incl min, max) with defaults for history- and influxdb adapter
 * (maxp) NEW: Temperatures get stored in history and influxdb only if WLT device is "active"ly used
+* (maxp) NEW: Button: Reboot WLANThermo
 * (maxp) CHG: VIS views
 * (maxp) FIX: handling of global acknowlishments
 

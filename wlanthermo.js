@@ -268,6 +268,12 @@ function stateUpdateHandler(id, state, callback) {
 					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
 					WLT[pathButtons].new_logfile = state.val;
 					break;
+				case "reboot_wlt":
+					adapter.log.warn('Button: reboot_wlt=' + state.val)
+					if (state.val) rebootWLT();
+					setTimeout(storeState, 1000, id, {val: false, ack: true}, "ne");
+					WLT[pathButtons].new_logfile = state.val;
+					break;
 				case "wlt_beeper":
 					if (state.val !== ov) {
 						if (state.from !== mySysID) {
@@ -492,7 +498,7 @@ function initPits(callback) {
 /*****************************
  * activate/deactivate history logging of temperatures in a certain channel
  */
-function setChannelHistory(channel, active=false) {
+function setStateHistory(oid, active=false) {
 	var oHist = {
         enabled: active,
         changesOnly: false,
@@ -511,38 +517,35 @@ function setChannelHistory(channel, active=false) {
         changesMinDelta: 0,
         storageType: ""
       };
-	var keys=["temp", "temp_min", "temp_max"];
-	adapter.log.debug("setChannelHistoy: " + channel + ": " + active);
+	adapter.log.debug("setStateHistory: " + oid + ": " + active);
 	
-	if (typeof(channel) === "undefined") return;
-	if (channel === null) return;
+	if (typeof(oid) === "undefined") return;
+	if (!oid) return;
 	
-	for (var k=0; k<keys.length; k++) {
-		var oid = pathChannels + "." + channel + "." + keys[k];
-		adapter.getObject(oid, function (e, o) {
-			if (o) {
-				if (typeof(o.common) === "undefined") o.common = {};  // safety first
-				if (typeof(o.common.custom) === "undefined") o.common.custom = {}; // safety first
-				if (typeof(o.common.custom["influxdb.0"]) === "undefined") o.common.custom["influxdb.0"] = oInflux;
-				if (typeof(o.common.custom["history.0"]) === "undefined") o.common.custom["history.0"] = oHist;
-				o.common.custom["history.0"].enabled = active;
-				o.common.custom["influxdb.0"].enabled = active;
-				
-				adapter.log.debug("setChannelHistoy: " + oid + ": " + o.common.custom["history.0"].enabled);
-				adapter.setObject(oid, o);
-			}
-		});
-	}
+	adapter.getObject(oid, function (e, o) {
+		if (o) {
+			if (typeof(o.common) === "undefined") o.common = {};  // safety first
+			if (typeof(o.common.custom) === "undefined") o.common.custom = {}; // safety first
+			if (typeof(o.common.custom["influxdb.0"]) === "undefined") o.common.custom["influxdb.0"] = oInflux;
+			if (typeof(o.common.custom["history.0"]) === "undefined") o.common.custom["history.0"] = oHist;
+			o.common.custom["history.0"].enabled = active;
+			o.common.custom["influxdb.0"].enabled = active;			
+			adapter.setObject(oid, o);
+		}
+	});
 }
 
 
 /*****************************
  * activate/deactivate history logging of temperatures in ALL channels
  */
-function setChannelsHistory(active=false) {
-	adapter.log.info("setChannelsHistoy: " + active);
-	for (var c=0; c<=adapter.config.maxChannels; c++)
-		setChannelHistory(c, active);
+function setHistory(active=false) {
+	adapter.log.info("setHistoy: " + active);
+	for (var c=0; c<=adapter.config.maxChannels; c++) {
+		setStateHistory(pathChannels + "." + c + ".temp", active);
+		setStateHistory(pathChannels + "." + c + ".temp_min", active);
+		setStateHistory(pathChannels + "." + c + ".temp_max", active);
+	}
 }
 
 
@@ -957,6 +960,24 @@ function initButtons(callback) {
 		},
 		function(e, s) {
 			if (!e && s) WLT[pathButtons].check_wlt = s.val;
+		}
+
+	);
+
+	storeState(pathButtons + ".reboot_wlt", {val: false, ack: true}, "ne",
+		{
+        		type: 'state',
+			common: {
+	    			name: "REBOOT(!) WLANThermo",
+	    			role: "button",
+	    			type: "boolean",
+	    			read: true,
+	    			write: true
+			},
+			native: {}
+		},
+		function(e, s) {
+			if (!e && s) WLT[pathButtons].reboot_wlt = s.val;
 		}
 
 	);
@@ -1404,7 +1425,7 @@ function reset(callback=null) {
 	initGlobalAlarms();
 	
 	wait4init(function(){
-		setChannelsHistory(WLT[pathStatus].active);
+		setHistory(WLT[pathStatus].active);
 		startTimers();
 		if (WLT[pathStatus].active)
 			checkWLT(function(){handleWLT("pathStatus");});
@@ -1424,8 +1445,8 @@ function newLogfile(callback=null) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 
 	adapter.log.info("newLogfile");
-	if (newLogfile_active) {
-		callback("newLogfile already running");
+	if (newLogfile_active || timer_postwlt) {
+		callback("newLogfile already running or updates due");
 		return;
 	}
 	newLogfile_active = true;
@@ -1482,7 +1503,7 @@ function checkWLT(callback=null) {
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 
     adapter.log.info("checkWLT");
-    if (!checkwlt_active) { // for the case some misconfiguration happened or someone plays the button game
+    if (!checkwlt_active && !timer_postwlt) { // for the case some misconfiguration happened or someone plays the button game
         checkwlt_active = true;
         WLT[pathStatus].rc = Number(-1); // why typecasting? But got warnings...
         WLT[pathStatus].reachable = false;
@@ -1507,7 +1528,8 @@ function checkWLT(callback=null) {
                     WLT[pathStatus].answer = result[0].replace(/<\/?[^>]+(>|$)/g, "");
                     WLT[pathStatus].reachable = true;
                     adapter.log.debug("checkWLT: " + WLT[pathStatus].answer + ".");
-
+					
+					//do not get asynchronuous here
 					s = String(body).match(/IP Address :\s+<b>.*<.b><br.*/i, "");
 					if (s) {
 						s[0] = String(s[0]).replace(/IP Address\s+:.*<b>/i, "");
@@ -1593,7 +1615,7 @@ function checkWLT(callback=null) {
                 callback(e);
         }
     } else {
-		adapter.log.warn("checkWLT already running");
+		adapter.log.warn("checkWLT already running or udpates due");
 		callback(null);
 	}
 }
@@ -1613,7 +1635,7 @@ function pollWLT(callback) {
     adapter.log.debug("pollWLT");
 
     // for the case some misconfiguration happened or someone plays the button game
-    if (!pollwlt_active) {
+    if (!pollwlt_active && !timer_postwlt) {
         pollwlt_active=true;
 		WLT.wlt = {};
 		WLT[pathStatus].rc = -1;
@@ -1658,8 +1680,60 @@ function pollWLT(callback) {
 				callback(e, WLT[pathStatus].answer);
 		}
     } else {
-		adapter.log.warn("pollWLT already running");
+		adapter.log.warn("pollWLT already running or updates due");
 		callback(null, WLT[pathStatus].answer);
+	}
+}
+
+
+/******************************
+ * Immediately reboot WLANThermo
+ */
+function rebootWLT(callback) {
+	var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/control/reboot.php";
+    
+	callback = (typeof(callback) === 'function') ? callback : function() {};
+	adapter.log.info("rebootWLT");
+
+	if (timer_postwlt) return;
+	
+	try {
+		var request = require("request");
+		var mydata = {reboot: "submit"};
+		var myheaders = {  
+			"content-type": "application/json",
+		};
+		var options = {
+			method: 'post',
+			url: url,
+			form: mydata,
+			headers: myheaders,
+			json: true,
+			timeout: adapter.config.timeout_GET,
+		};
+            
+		request(options, function (error, response, body) {
+			WLT[pathStatus].rc = Number(response && response.statusCode);
+			if (!error && WLT[pathStatus].rc === 200) {
+				WLT[pathStatus].answer = "REBOOT requested";
+				WLT[pathStatus].reachable = true;
+				adapter.log.info("rebootWLT: " + WLT[pathStatus].answer + ".");
+				callback(null);
+			} else {
+				WLT[pathStatus].reachable = false;
+				if (error) 
+					WLT[pathStatus].answer = "[" + (response && response.statusCode) + "] " + String(error);
+				else
+					WLT[pathStatus].answer = "[" + (response && response.statusCode) + "] HTTP error";
+				adapter.log.warn("rebootWLT: " + WLT[pathStatus].answer + ".");
+				callback(WLT[pathStatus].answer);
+			}
+		});
+	} catch (e) { 
+		WLT[pathStatus].answer = "rebootWLT: " + e.toString();
+		WLT[pathStatus].reachable = false;
+		adapter.log.error("rebootWLT: " + WLT[pathStatus].answer + ".");
+		callback(e);
 	}
 }
 
