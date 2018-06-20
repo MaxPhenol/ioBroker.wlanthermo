@@ -53,6 +53,14 @@
 			"de": "Login auch für Temperaturen erforderlich", 
 			"en": "Login is also required for temperatures"
 		},
+        "historyInst": {
+			"de": "History Adapter Instanz, -1 = nicht automatisch ein/aus", 
+			"en": "History adapter instance, -1 = do not manage on/off"
+		},
+        "influxInst": {
+			"de": "InfluxDB Adapter Instanz, -1 = nicht automatisch ein/aus", 
+			"en": "InfluxDB adapter instance, -1 = do not manage on/off"
+		},
 		"Advanced Settings - KNOW WHAT YOU CHANGE": {
 			"de": "<i>Erweiterte</i> Einstellungen. Nur anpassen, wenn der Code auf dem WLANThermo entsprechend geändert wurde. <i>WISSE WAS DU ÄNDERST!<i>",
 			"en": "<i>Advanced</i> settings. Change these only if code on WLANThermo device got changed, too. <i>KNOW WHAT YOU CHANGE!</i>"
@@ -138,6 +146,18 @@
                     <input class="value" id="password" type="text"/>
                     <label for="password">raspberry</label>
                     <span class="translate">password</span>
+                </div>
+			</div>
+			<div class="row">
+                <div class="input-field col s3">
+					<input class="value number" id="historyInst" min="-1" max="9" size="2" maxlength="2" type="number"/>
+                    <label for="historyInst">0</label>
+					<span class="translate">historyInst</span>
+                </div>
+                <div class="input-field col s3">
+					<input class="value number" id="influxInst" min="-1" max="9" size="2" maxlength="2" type="number"/>
+                    <label for="influxInst">-1</label>
+					<span class="translate">influxInst</span>
                 </div>
 			</div>
             <div class="row col s12">

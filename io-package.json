@@ -35,13 +35,15 @@
 		"maxChannels": 11,
 		"maxPits": 2,
 		"auth_GET": false,
-		"timeout_GET": false,
+		"timeout_GET": 2500,
 		"interval_monitoring": 60,
 		"interval_temps": 5,
 		"interval_timeouts": 10,
 		"timeout_temps": 30,
 		"timeout_device_off": 300,
-		"delayPOST" : 4
+		"delayPOST" : 4,
+		"historyInst" : 0,
+		"influxInst" : -1
     },
     "objects": [],
     "instanceObjects": [
