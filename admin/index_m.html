@@ -1,0 +1,200 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+<link rel="stylesheet" type="text/css" href="../../css/adapter.css"/>
+<script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+<script type="text/javascript" src="../../js/translate.js"></script>
+<script type="text/javascript" src="../../lib/js/materialize.js"></script>
+<script type="text/javascript" src="../../js/adapter-settings.js"></script>
+<script type="text/javascript" src="words.js"></script>
+
+<style>
+	.m .col .select-wrapper+label { top: -26px; }
+	.m span{ font-size: 0.9em; }
+	.logo-le span { padding-top: 10px; padding-bottom: 10px; }
+</style>
+
+<script type="text/javascript">
+    systemDictionary = {
+		"Settings": {
+			"de": "Einstellungen",
+			"en": "Settings"
+		},
+        "Connection": {
+			"de": "Verbindung",
+			"en": "Connection"
+		},
+        "History": {
+			"de": "Historie schalten für Adapter",
+			"en": "History management for adapter"
+		},
+        "hostname": {
+			"de": "Hostname oder IP Adresse", 
+			"en": "Hostname or IP address"
+		},
+        "username": {
+			"de": "Web-UI Benutzername", 
+			"en": "Web-ui username"
+		},
+        "password": {
+			"de": "Web-UI Passwort", 
+			"en": " web-ui password"
+		},
+        "timeout_GET": {
+			"de": "Timeout für HTTP Requests [ms]", 
+			"en": "Timeout HTTP requests [ms]"
+		},
+        "historyInst": {
+			"de": "history.X, -1=aus", 
+			"en": "history.X, -1=off"
+		},
+        "influxInst": {
+			"de": "influxdb.X, -1=aus", 
+			"en": "influxdb.X, -1=off"
+		},
+		"Advanced Settings": {
+			"de": "Erweiterte Einstellungen",
+			"en": "Advanced settings"
+		},
+        "Adapter restarts immediately when settings get saved": {
+            "de": "Beim Speichern der Einstellungen wird der Adapter sofort neu gestartet."
+        }
+    };
+
+    function load(settings, onChange) {
+       if (!settings) return;
+	   
+	   if (typeof(settings.hostname) === 'undefined') settings.hostname = "wlanthermo:80";
+	   if (typeof(settings.username) === 'undefined') settings.username = "wlanthermo";
+	   if (typeof(settings.password) === 'undefined') settings.password = "raspberry";
+	   if (typeof(settings.maxChannels) === 'undefined') settings.maxChannels = 11;
+	   if (typeof(settings.maxPits) === 'undefined') settings.maxPits = 2;
+	   if (typeof(settings.timeout_GET) === 'undefined') settings.timeout_GET = 2500;
+	   if (typeof(settings.auth_GET) === 'undefined') settings.auth_GET = false;
+	   
+	   $('.value').each(function () {            
+            var $key = $(this);
+            var id = $key.attr('id');
+            if ($key.attr('type') === 'checkbox') {
+		        // do not call onChange direct, because onChange could expect some arguments
+                $key.prop('checked', settings[id]).change(function() {
+                    onChange();
+                });
+            } else {
+		        // do not call onChange direct, because onChange could expect some arguments
+                $key.val(settings[id]).change(function() {
+                    onChange();
+                }).keyup(function() {
+                    onChange();
+                });
+            }
+        });
+
+        onChange(false);
+
+        M.updateTextFields();
+    }
+
+    function save(callback) {
+        var obj = {};
+        $('.value').each(function () {
+            var $this = $(this);
+            if ($this.attr('type') === 'checkbox') {
+                obj[$this.attr('id')] = $this.prop('checked');
+            } else {
+                obj[$this.attr('id')] = $this.val();
+            }
+        });		
+	   callback(obj);
+    }
+</script>
+</head>
+<body>
+    <div class="m adapter-container">
+        <div class="row">
+            <div class="row">
+				<div class="col s12">
+                    <img src="wlanthermo-logo.png" class="logo-le"/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <p class="translate">Connection</p>
+				</div>
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="hostname" type="text"/>
+                    <label for="hostname" class="translate">hostname</label>
+                    <!--
+                    <label for="hostname">wlanthermo:80</label>
+                    <span class="translate">hostname</span>
+					-->
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="username" type="text"/>
+                    <label for="username" class="translate">username</label>
+                    <!--
+                    <label for="username">wlanthermo</label>
+                    <span class="translate">username</span>
+                    -->
+                </div>
+                <div class="input-field col s12 m6 l4">
+                    <input class="value" id="password" type="text"/>
+                    <label for="password" class="translate">password</label>
+                    <!--
+					<label for="password">raspberry</label>
+                    <span class="translate">password</span>
+					-->
+                </div>
+			</div>
+			<div class="row">
+                <div class="col s12">
+                    <p class="translate">History</p>
+				</div>
+                <div class="input-field col s3">
+					<input class="value number" id="historyInst" min="-1" max="9" size="2" maxlength="2" type="number"/>
+					<label for="historyInst" class="translate">historyInst</label>
+                    <!--
+                    <label for="historyInst">-1</label>
+					<span class="translate">-1, 0-9</span>
+					-->
+                </div>
+                <div class="input-field col s3">
+					<input class="value number" id="influxInst" min="-1" max="9" size="2" maxlength="2" type="number"/>
+                    <label for="influxInst" class="translate">influxInst</label>
+					<!-- 
+                    <label for="influxInst">-1</label>
+					<span class="translate">-1, 0-9</span>
+					-->
+                </div>
+			</div>
+            <div class="row col s12">
+				<p><br></p>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <p class="translate">Advanced Settings</p>
+				</div>
+                <div class="input-field col s3">
+					<input class="value number" id="timeout_GET" min="500" max="5000" size="4" maxlength="4" type="number"/>
+                    <label for="timeout_GET" class="translate">timeout_GET</label>
+					<!-- 
+                    <label for="timeout_GET">2500</label>
+					<span class="translate">timeout_GET</span>
+					-->
+					</div>
+            </div>
+            <div class="row col s12">
+				<p><br></p>
+            </div>
+            <div class="row">
+                <div class="col s12">
+					<p>&nbsp</p>
+                    <p class="translate">Adapter restarts immediately when settings get saved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

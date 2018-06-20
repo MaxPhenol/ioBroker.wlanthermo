@@ -1315,6 +1315,8 @@ function reset(callback) {
 	
 	adapter.log.info("channels usable: 0-" + adapter.config.maxChannels);
 	adapter.log.info("pits usable: 1-" + adapter.config.maxPits);
+	adapter.log.info("Activate/deactivate settings for history adapter instance: " + adapter.config.influxInst);
+	adapter.log.info("Activate/deactivate settings for influxdb adapter instance: " + adapter.config.historyInst);
 
 	if (initialized) {
 		aPreps[aPreps.length] = stopTimers;
@@ -1976,7 +1978,7 @@ function getWLTcfg(callback) {
     var url = "http://" + adapter.config.username + ":" + adapter.config.password + "@" + adapter.config.hostname + "/conf/WLANThermo.conf";
 	callback = (typeof(callback) === 'function') ? callback : function() {};
 
-    adapter.log.info("getWLTcfg");
+    adapter.log.debug("getWLTcfg");
 	
 	if (timer_postwlt || postwltcfg_active) {
 		adapter.log.warn("getWLTcfg: configuration already in progress");
