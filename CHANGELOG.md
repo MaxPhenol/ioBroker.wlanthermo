@@ -16,6 +16,7 @@
 * (maxp) NEW: Button: turn WLT beeper on and off
 * (maxp) NEW: Button: turn WLT push notifications on and off
 * (maxp) CHG: vis views
+* (maxp) NEW: vis view "wlanthermo_vis_regular" with example flot graph
 * (maxp) CHG: init functions
 * (maxp) CHG: state roles changed to better match their context
 * (maxp) FIX: handling of global acknowlishments
