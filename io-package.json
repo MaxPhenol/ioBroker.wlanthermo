@@ -3,6 +3,10 @@
         "name": "wlanthermo",
         "version": "0.1.1",
         "news": {
+			"0.1.1": {
+				"en": "functional updates and more compliance to ioBroker standards",
+				"de": "Funktionale verbesserungen und Anpassungen an ioBroker Standards"
+			}
             "0.1.0": {
                 "en": "initial adapter",
                 "de": "Initiale Version"
@@ -42,7 +46,7 @@
 		"timeout_temps": 30,
 		"timeout_device_off": 300,
 		"delayPOST" : 4,
-		"historyInst" : 0,
+		"historyInst" : -1,
 		"influxInst" : -1
     },
     "objects": [],
