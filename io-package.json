@@ -6,7 +6,7 @@
 			"0.1.1": {
 				"en": "functional updates and more compliance to ioBroker standards",
 				"de": "Funktionale verbesserungen und Anpassungen an ioBroker Standards"
-			}
+			},
             "0.1.0": {
                 "en": "initial adapter",
                 "de": "Initiale Version"
