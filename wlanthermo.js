@@ -267,7 +267,7 @@ function stateUpdateHandler(id, state, callback) {
 				case 'temp':
 				    // temp updates are sent from WLT itself, no ack handling necessary
 					if (state.val !== ov) {
-						WLT.last_seen = state.lc;
+						WLT.last_seen = Number(state.lc);
 						handleChannelUpdate(a[3], state);
 					}
 					WLT[pathChannels][a[3]][a[4]] = state.val;
@@ -1931,7 +1931,11 @@ function checkTimeout() {
 		var d = new Date();
 		var diff = d.getTime() - WLT.last_seen;
 
-		adapter.log.debug("checkTimeout()");
+		//adapter.log.debug("checkTimeout");
+		//adapter.log.debug("checktimeout:  now=" + d.getTime());
+		//adapter.log.debug("checktimeout: last=" + WLT.last_seen);
+		//adapter.log.debug("checktimeout: diff=" + diff);
+		//adapter.log.debug("checktimeout: tout=" + timeout);
 		
 		if (timeout > 0) {
 			if (typeof(WLT.last_seen) !== "number") WLT.last_seen = 0;
