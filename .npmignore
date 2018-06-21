@@ -1,3 +1,10 @@
 /node_modules
 node_modules
 .git
+gulpfile.js
+admin/i18n
+tasks
+.idea
+test
+.travis.yml
+appveyor.yml

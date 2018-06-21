@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "wlanthermo",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "news": {
+			"0.1.1": {
+				"en": "functional updates and more compliance to ioBroker standards",
+				"de": "Funktionale verbesserungen und Anpassungen an ioBroker Standards"
+			},
             "0.1.0": {
                 "en": "initial adapter",
                 "de": "Initiale Version"
@@ -35,12 +39,15 @@
 		"maxChannels": 11,
 		"maxPits": 2,
 		"auth_GET": false,
-		"timeout_GET": false,
+		"timeout_GET": 2500,
 		"interval_monitoring": 60,
 		"interval_temps": 5,
 		"interval_timeouts": 10,
 		"timeout_temps": 30,
-		"timeout_device_off": 300
+		"timeout_device_off": 300,
+		"delayPOST" : 4,
+		"historyInst" : -1,
+		"influxInst" : -1
     },
     "objects": [],
     "instanceObjects": [
