@@ -21,6 +21,7 @@
             "en": "WLANThermo mini BBQ Grill Thermometer Pitmaster - Grillsportverein.de wlanthermo.de",
             "de": "WLANThermo mini BBQ Grill Thermometer Pitmaster - Grillsportverein.de wlanthermo.de"
         },
+        "license": "GNU GPL 3",
         "authors": [ "maxp <max.phenol@outlook.de>" ],
         "platform": "Javascript/Node.js",
         "mode": "daemon",
