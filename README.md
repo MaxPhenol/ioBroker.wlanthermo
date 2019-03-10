@@ -1,6 +1,6 @@
 ![Logo](admin/wlanthermo-logo.png)
 # ioBroker.wlanthermo
-=================
+![Number of Installations](http://iobroker.live/badges/wlanthermo-installed.svg) ![Number of Installations](http://iobroker.live/badges/wlanthermo-stable.svg) =================
 
 This adapter for ioBroker supports WLANThermo mini devices only for now. It reads temperatures and settings and writes them as states to ioBroker. This allows flexible alarming, smart home automation and mobile views.
 
