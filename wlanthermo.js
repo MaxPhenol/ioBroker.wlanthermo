@@ -31,7 +31,7 @@ var cond_update_temp = "any";
 // default empty object to store WLT related data
 var WLT = {"wlt": {}, "cfg": {}};
 
-var utils = require(__dirname + '/lib/utils'); // Get common adapter utils
+var utils = require('@iobroker/adapter-core'); // Get common adapter utils
 var adapter = new utils.Adapter('wlanthermo');
 var mySysID = "";
 var initialized = false;
